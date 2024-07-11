@@ -1,0 +1,25 @@
+[project]
+name = "micro-htmx"
+version = "0.1.0"
+description = "Add your description here"
+dependencies = [
+    "micropython-rp2-pico-w-stubs>=1.20.0.post5",
+    "typing-extensions>=4.12.2",
+    "microdot>=2.0.6",
+]
+readme = "README.md"
+requires-python = ">= 3.8"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.rye]
+managed = true
+dev-dependencies = []
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/micro_htmx"]
