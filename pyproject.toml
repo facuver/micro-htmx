@@ -6,9 +6,11 @@ dependencies = [
     "micropython-rp2-pico-w-stubs>=1.20.0.post5",
     "typing-extensions>=4.12.2",
     "microdot>=2.0.6",
+    "ipykernel>=6.29.5",
+    "jurigged>=0.5.8",
 ]
 readme = "README.md"
-requires-python = ">= 3.8"
+requires-python = ">= 3.12"
 
 [build-system]
 requires = ["hatchling"]

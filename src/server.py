@@ -1,15 +1,8 @@
-from microdot.microdot import Microdot , Response,send_file
+from microdot.microdot import Microdot , Response,send_file,Request
 from microdot import sse
 import asyncio
-from html_builder import Tag,template,Button, H1,Input
-
-
-from machine import Pin
-
-
-led = Pin("LED",Pin.OUT)
-
-led.on()
+from html_builder import Tag,Button, H1,Input
+from pages import template
 
 
 def send_tag(tag):
@@ -19,20 +12,24 @@ app = Microdot()
 api = Microdot()
 
 
+def parse_htmx_body(body:bytearray):
+    sting = body.decode("utf-8")
+    return sting.split("=")
+    print(sting)
 
 
 @api.post("/clicked")
-async def _(request):
-    global led
-    led.toggle()
-    return send_tag( Tag("button",f"Tunr {"on" if led.value() == 0 else "off"}!!",hx_post="/api/clicked",hx_swap="outerHTML"))
+async def _(request:Request):
+    name,val  = parse_htmx_body(request.body)
+
+    return send_tag( Tag("button",val,hx_post="/api/clicked",hx_swap="outerHTML",id="but"))
 
 @app.get("/")
 async def _(request):
     with template() as t:
         H1("Title")
-        Input(value="HELLP")
-        Button("click!",hx_post="/api/clicked",hx_swap="outerHTML")
+        Input(placeholder="Put something", hx_trigger="keyup changed delay:500ms" , hx_post="/api/clicked",name = "input",hx_target="#but",hx_swap="outerHTML")
+        Button("click!",hx_post="/api/clicked",hx_swap="outerHTML",id="but")
     return send_tag(t)
 
 
