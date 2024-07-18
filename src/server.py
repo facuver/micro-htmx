@@ -1,59 +1,64 @@
 from microdot.microdot import Microdot , Response,send_file,Request
-from microdot import sse
+from microdot.websocket import with_websocket , WebSocket
 import asyncio
-from html_builder import Tag,Button, H1,Input
-from pages import template
+from html_builder import *
+from pages import template,tabs
+import utime as time
+import json, machine
 
 
-def send_tag(tag):
-    return Response(str(tag),headers={'Content-Type': 'text/html'})
+def send_tag(tag:Tag):
+    return Response(tag.render(),headers={'Content-Type': 'text/html'})
+
+html = lambda x: x   #hack to get code linting on vscode
 
 app = Microdot()
-api = Microdot()
+led = machine.Pin("LED",machine.Pin.OUT)
 
-
-def parse_htmx_body(body:bytearray):
-    sting = body.decode("utf-8")
-    return sting.split("=")
-    print(sting)
-
-
-@api.post("/clicked")
-async def _(request:Request):
-    name,val  = parse_htmx_body(request.body)
-
-    return send_tag( Tag("button",val,hx_post="/api/clicked",hx_swap="outerHTML",id="but"))
+def time_tag():
+    return Div(str(time.ticks_ms()) , id="notifications").render()
 
 @app.get("/")
 async def _(request):
     with template() as t:
-        H1("Title")
-        Input(placeholder="Put something", hx_trigger="keyup changed delay:500ms" , hx_post="/api/clicked",name = "input",hx_target="#but",hx_swap="outerHTML")
-        Button("click!",hx_post="/api/clicked",hx_swap="outerHTML",id="but")
+        
+
+        with Div(hx_ext="ws", ws_connect="/echo"):
+            time_tag()
+            Div(text="...",id="chat_room")
+            with Form(id="form",ws_send="true"):
+                Button("ClickMe",)
+                Input(name="chat_message")
+                
     return send_tag(t)
 
 
+@app.route('/echo')
+@with_websocket
+async def echo(request, ws:WebSocket):
 
-
-@app.route('/events')
-@sse.with_sse
-async def events(request, sse):
-    for i in range(3):
-        await asyncio.sleep(1)
-        await sse.send(i, event = "message")  # unnamed event+
+    while True:
+        data =json.loads( await  ws.receive())
+        #print(data)
+        led.toggle()
+        #await asyncio.sleep(0.10)
+        await ws.send(time_tag())
     
-    await sse.send("close",event="close")  # named event
+
+@app.route("/tab/<id>")
+async def _(request,id):
+        return send_tag(tabs(int(id)))
 
 
 
 @app.route('/<file>')
+
 async def public(request,file):
     return send_file(f"./public/{file}")
-
+    
 
 def run():
-    app.mount(api,"/api")
-    app.run(debug= True)
+    app.run(debug= True,port=80)
   
 
 if __name__ =="__main__":
