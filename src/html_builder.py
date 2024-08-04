@@ -1,115 +1,84 @@
-from ucontextlib import contextmanager
-
-from typing import TypedDict 
-try:
-    from typing_extensions import Unpack
-except:
-    pass
+from typing import TypedDict ,Literal
+from typing_extensions import Unpack
+from microdot.microdot import Microdot, Response
 
 
+callbacks_app = Microdot()
 
+@callbacks_app.post("/<id>")
+def _(request,id):
+    val=""
+    if b"=" in request.body:
+        val = request.body.decode("utf-8").split("=")[1]
+    
+    resp = callbacks_map[id](val)
+    if isinstance(resp,str):
+        return resp
+    return 
+
+
+Response.default_content_type = "text/html"
+
+callbacks_map ={}
 
 class KWARGS(TypedDict):
     hx_get: str
     hx_post: str
-    hx_swap: str
+    hx_swap: Literal["innerHTML", "outerHTML", "textContent"]
     hx_target: str
     hx_trigger: str
+    hx_on_click: str
     hx_push_url: str
     id: str
     value:str
     klass:str
 
+class Element:
+    self_closing_tags = {'img', 'input', 'br', 'hr', 'meta', 'link'}
+    always_closing_tags = {'script', 'style'}
 
-
-
-@contextmanager
-def template():
-    with Tag("html", klass="") as html:
-        with Tag("head"):
-            Tag("script", src="/htmx.min.js")
-            Tag("link", rel="stylesheet", href="./simple.min.css")
-            Tag("title", "This is Great!!")
-        with Tag("body"):
-            header()
-            yield html
-
-
-def header():
-    with Tag("header"):
-        Tag("span","Terest")
-        Tag("span","Terest")
-
-
-from typing import List, Dict, Any, Tuple
-from collections import deque
-
-# Ensure this function exists
-def replace_keys(conflinting_keys: List[Tuple[str, str]], kwargs: Dict[str, Any]) -> Dict[str, Any]:
-    for old_key, new_key in conflinting_keys:
-        if old_key in kwargs:
-            kwargs[new_key] = kwargs.pop(old_key)
-    return kwargs
-
-class Tag:
-    stack = []
-
-    def __init__(self, tag: str, children: List['Tag'] = None, **kwargs: Unpack[KWARGS]) -> None:
-        self.tag = tag
-
-        conflicting_keys = [("klass", "class")] if "klass" in kwargs else []
-        conflicting_keys.extend([(key, key.replace("_", "-")) for key in kwargs if "_" in key])
-        self.kwargs = replace_keys(conflicting_keys, kwargs)
-        
-        self.children = children if children is not None else []
-
-        if Tag.stack:
-            Tag.stack[-1].append(self)
+    def __init__(self, name) -> None:
+        self.name = name
     
-    def __enter__(self):
-        Tag.stack.append(self)
-        return self
+    def __call__(self, *childs, callback=None,args=[], **kwargs:Unpack[KWARGS]):
+        if callback:
+            id_int = id(callback)
+            callbacks_map[str(id_int)] = callback
+            kwargs["hx_post"]=f"/callbacks/{id_int}"
 
-    def __exit__(self, exc_type, exc_value, traceback):
-        Tag.stack.pop()
-        return True
-
-
-    def __str__(self, level=0):
-        indent = '  ' * level
-        kwargs_str = " ".join([f"{key}='{value}'" for key, value in self.kwargs.items()])
-        header = f"{indent}<{self.tag} {kwargs_str}>"
-        footer = f"</{self.tag}>\n"
-        if self.children:
-            if isinstance(self.children[0], Tag):
-                header += "\n"
-                footer = f"{indent}{footer}"
-
-
-
-        slot = ""
-        for child in self.children:
-            if isinstance(child, Tag):
-                slot += child.__str__(level + 1)
+        # Convert kwargs keys from underscore to hyphen and handle 'klass'
+        converted_kwargs = {}
+        for key, value in kwargs.items():
+            if key == 'klass':
+                converted_kwargs['class'] = value
             else:
-                slot += f"{child}"
-        return header + slot + footer
-    
-    def append(self, tag: 'Tag'):
-        self.children.append(tag)
-
-class Input(Tag):
-    def __init__(self,**kwargs: Unpack[KWARGS]) -> None:
-        super().__init__("input",  **kwargs)
-
-class Button(Tag):
-    def __init__(self, children: List[Tag] = None,**kwargs: Unpack[KWARGS]) -> None:
-        super().__init__("button", children, **kwargs)
+                converted_kwargs[key.replace('_', '-')] = value
         
-class Div(Tag):
-    def __init__(self, text="", *args, **kwargs) -> None:
-        super().__init__("div", text, *args, **kwargs)
+        attrs = ' '.join(args + [f"{key}='{val}'" for key, val in converted_kwargs.items()])
+        open_tag = f"<{self.name}{' ' + attrs if attrs else ''}>"
+        
+        if self.name in self.self_closing_tags:
+            return open_tag
+        
+        if not childs:
+            if self.name in self.always_closing_tags:
+                return f"{open_tag}</{self.name}>"
+            return open_tag
+        
+        content = '\n'.join(
+            child for child in childs
+        )
+        
+        return f"{open_tag}\n{content}\n</{self.name}>"
+        
 
-class H1(Tag):
-    def __init__(self,  children: List[Tag] = None,**kwargs: Unpack[KWARGS]) -> None:
-        super().__init__("h1", children, **kwargs)
+class Html(Element):
+    def __init__(self):
+        super().__init__('html')
+
+    def __call__(self, *childs, args=[], **kwargs):
+        doctype = "<!DOCTYPE html>"
+        html_content = super().__call__(*childs, args=args, **kwargs)
+        return f"{doctype}\n{html_content}"
+
+
