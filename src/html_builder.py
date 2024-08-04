@@ -1,5 +1,7 @@
 from typing import TypedDict ,Literal
 from typing_extensions import Unpack
+
+
 from microdot.microdot import Microdot, Response
 
 
@@ -7,11 +9,11 @@ callbacks_app = Microdot()
 
 @callbacks_app.post("/<id>")
 def _(request,id):
-    val=""
-    if b"=" in request.body:
-        val = request.body.decode("utf-8").split("=")[1]
+    body = {}
+    if request.body:
+        body = {key:value for key,value in [p.split("=") for p in request.body.decode("utf-8").split("&")] }
     
-    resp = callbacks_map[id](val)
+    resp = callbacks_map[id](body)
     if isinstance(resp,str):
         return resp
     return 

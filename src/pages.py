@@ -1,18 +1,30 @@
-from base_elemets import Html,Head,Script,Link,Title,Body,Main
+from base_elemets import Html,Head,Script,Link,Title,Body,Main,Header,Footer,Nav,Ul,Li,A,Strong,Style,Div
 
 
+def navBar():
+    return  Nav(
+        Ul(
+            Li(Strong("RP2040"))
+        ),
+        Ul(
+            Li(A("About", klass="contrart",href="#")),
+            Li(A("State", klass="contrart",href="#")),
+            Li(A("GPIO", klass="contrart",href="#"))
+        )
+    )
 def template(content):
     return Html(
         Head(
-            Script(src="gz/htmx.min.js.gz"),
-            Link(rel="stylesheet", href="mvp.css"),
-            Title("Thiss iss amazing")
+            Script(src="gz/gz.htmx.min.js"),
+            Link(rel="stylesheet", href="gz/gz.pico.zinc.min.css"),
         ),
         Body(
+            Header(navBar(),klass="container"),
             Main(
-                content
+                content,
 
-            )
+            ),
+            klass="container"
         ),
         color_mode="user"
     )

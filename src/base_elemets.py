@@ -8,6 +8,7 @@ Title = Element("title")
 Meta = Element("meta")
 Link = Element("link")
 Script = Element("script")
+Style = Element("style")
 Noscript = Element("noscript")
 
 # Structure

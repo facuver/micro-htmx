@@ -1,35 +1,18 @@
-from microdot.microdot import Microdot, send_file
-from base_elemets import Div,Input,Button ,Form,Aside,Nav,Li,Ul # noqa: F403
+from lib.microdot.microdot import Microdot, send_file, Response
+from base_elemets import Div,Input,Button ,Form,Aside,Nav,Li,Ul,H1 # noqa: F403
 from pages import template
 from html_builder import callbacks_app
 
 app = Microdot()
+Response.default_content_type = "text/html"
 
-def menu():
-    return Nav(
-        Ul(
-            Li(
-                Ul(
-                    Li("manu1"),
-                    Li("manu2"),
-                    Li("manu3"),
-                )
-            )
-        )
-
-    )
+def incremetn(x):
+    
+    return Button(f"Button {x+1}",callback=lambda x,v=x: incremetn(v+1),hx_swap="outerHTML")
 
 @app.get("/")
 async def _(request):
-    til=Div("HEYYYYY",callback=lambda x:Div("HEy!!@!!"),id="result")
-    print(til)
-    return template(Div( 
-                        "Hello", 
-                        til,
-                        til,
-                        Input(name="ho",klass="input" ,placehoder="as",callback=lambda x:x,hx_target="#result",hx_trigger="keyup changed delay:0.1s"),
-                        Button("click",callback=lambda x:print("hello"),hx_swap="innerHTML"),
-                        )) 
+    return template(Div(*[incremetn(i) for i in range(10)] ))
 
 
 @app.route("/gz/<file>")
