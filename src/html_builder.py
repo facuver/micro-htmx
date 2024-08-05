@@ -1,86 +1,40 @@
-from typing import TypedDict ,Literal
-from typing_extensions import Unpack
 
-
-from microdot.microdot import Microdot, Response
-
+from pages import template
+from microdot.microdot import Microdot, Response, send_file
+from base_elemets import Element
 
 callbacks_app = Microdot()
+app = Microdot()
 
-@callbacks_app.post("/<id>")
-def _(request,id):
+def page(path):
+    def decorator(f):
+        @app.get(path)
+        async def decorated(*args,**kwargs):
+            resp = await f(*args,**kwargs)
+            if isinstance(resp,str):
+                print("all good")
+            if isinstance(resp,tuple):
+                resp = " ".join(resp)
+            return Response(template(resp),headers={"Content-Type":"text/html"})
+        return decorated
+    return decorator
+        
+@app.post("callbacks/<id>")
+async def _(request,id):
     body = {}
     if request.body:
         body = {key:value for key,value in [p.split("=") for p in request.body.decode("utf-8").split("&")] }
     
-    resp = callbacks_map[id](body)
+    resp = Element.callbacks_map[id](body)
     if isinstance(resp,str):
         return resp
     return 
 
 
-Response.default_content_type = "text/html"
+@app.get("public/gz/<file>")
+async def _(request, file):
+    return send_file(f"./public/gz/{file}",compressed=True)
 
-callbacks_map ={}
-
-class KWARGS(TypedDict):
-    hx_get: str
-    hx_post: str
-    hx_swap: Literal["innerHTML", "outerHTML", "textContent"]
-    hx_target: str
-    hx_trigger: str
-    hx_on_click: str
-    hx_push_url: str
-    id: str
-    value:str
-    klass:str
-
-class Element:
-    self_closing_tags = {'img', 'input', 'br', 'hr', 'meta', 'link'}
-    always_closing_tags = {'script', 'style','div'}
-
-    def __init__(self, name) -> None:
-        self.name = name
-    
-    def __call__(self, *childs, callback=None,args=[], **kwargs:Unpack[KWARGS]):
-        if callback:
-            id_int = id(callback)
-            callbacks_map[str(id_int)] = callback
-            kwargs["hx_post"]=f"/callbacks/{id_int}"
-
-        # Convert kwargs keys from underscore to hyphen and handle 'klass'
-        converted_kwargs = {}
-        for key, value in kwargs.items():
-            if key == 'klass':
-                converted_kwargs['class'] = value
-            else:
-                converted_kwargs[key.replace('_', '-')] = value
-        
-        attrs = ' '.join(args + [f"{key}='{val}'" for key, val in converted_kwargs.items()])
-        open_tag = f"<{self.name}{' ' + attrs if attrs else ''}>"
-        
-        if self.name in self.self_closing_tags:
-            return open_tag
-        
-        if not childs:
-            if self.name in self.always_closing_tags:
-                return f"{open_tag}</{self.name}>"
-            return open_tag
-        
-        content = '\n'.join(
-            child for child in childs
-        )
-        
-        return f"{open_tag}\n{content}</{self.name}>"
-        
-
-class Html(Element):
-    def __init__(self):
-        super().__init__('html')
-
-    def __call__(self, *childs, args=[], **kwargs):
-        doctype = "<!DOCTYPE html>"
-        html_content = super().__call__(*childs, args=args, **kwargs)
-        return f"{doctype}\n{html_content}"
-
-
+@app.get("public/<file>")
+async def _(request, file):
+    return send_file(f"./public/{file}")

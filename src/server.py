@@ -1,38 +1,23 @@
-from lib.microdot.microdot import Microdot, send_file, Response
 from base_elemets import Div,Input,Button ,Form,Aside,Nav,Li,Ul,H1 # noqa: F403
-from pages import page
-from html_builder import callbacks_app
 
-app = Microdot()
-Response.default_content_type = "text/html"
-
-def incremetn(x):
-    
-    return Button(f"Button {x+1}",callback=lambda x,v=x: incremetn(v+1),hx_swap="outerHTML")
+from html_builder import page, app
 
 
-
-@app.get("/")
-@page
+@page("/")
 async def _(request):
-    return Div("hey")
+    return Button("test",hx_get="/test")
 
-@app.get("/next")
-@page
+@page("/next")
 async def _(request):
-    return Div("Next")
+    return Div("next"),Div("ds"),Div("Sd")
 
-@app.route("/gz/<file>")
-async def _(request, file):
-    return send_file(f"./public/gz/{file}",compressed=True)
 
-@app.route("/<file>")
-async def _(request, file):
-    return send_file(f"./public/{file}")
-
+@app.get("/test")
+async def _(request):
+    print("Hey")
+    return 
 
 def run():
-    app.mount(callbacks_app,"/callbacks")
     app.run(debug=True)
 
 
