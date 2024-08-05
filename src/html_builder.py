@@ -37,7 +37,7 @@ class KWARGS(TypedDict):
 
 class Element:
     self_closing_tags = {'img', 'input', 'br', 'hr', 'meta', 'link'}
-    always_closing_tags = {'script', 'style'}
+    always_closing_tags = {'script', 'style','div'}
 
     def __init__(self, name) -> None:
         self.name = name
@@ -71,7 +71,7 @@ class Element:
             child for child in childs
         )
         
-        return f"{open_tag}\n{content}\n</{self.name}>"
+        return f"{open_tag}\n{content}</{self.name}>"
         
 
 class Html(Element):

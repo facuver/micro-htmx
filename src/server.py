@@ -1,6 +1,6 @@
 from lib.microdot.microdot import Microdot, send_file, Response
 from base_elemets import Div,Input,Button ,Form,Aside,Nav,Li,Ul,H1 # noqa: F403
-from pages import template
+from pages import page
 from html_builder import callbacks_app
 
 app = Microdot()
@@ -10,10 +10,17 @@ def incremetn(x):
     
     return Button(f"Button {x+1}",callback=lambda x,v=x: incremetn(v+1),hx_swap="outerHTML")
 
-@app.get("/")
-async def _(request):
-    return template(Div(*[incremetn(i) for i in range(10)] ))
 
+
+@app.get("/")
+@page
+async def _(request):
+    return Div("hey")
+
+@app.get("/next")
+@page
+async def _(request):
+    return Div("Next")
 
 @app.route("/gz/<file>")
 async def _(request, file):

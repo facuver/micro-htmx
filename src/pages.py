@@ -7,8 +7,8 @@ def navBar():
             Li(Strong("RP2040"))
         ),
         Ul(
-            Li(A("About", klass="contrart",href="#")),
-            Li(A("State", klass="contrart",href="#")),
+            Li(A("About", klass="contrart",href="/")),
+            Li(A("State", klass="contrart",href="/next")),
             Li(A("GPIO", klass="contrart",href="#"))
         )
     )
@@ -28,3 +28,10 @@ def template(content):
         ),
         color_mode="user"
     )
+
+def page(func):
+    """decorator to apply main template, wiht htmx, css and layout"""
+    async def wrapper(*args, **kwargs):
+        response = await func(*args, **kwargs)
+        return template(response)
+    return wrapper
