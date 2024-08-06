@@ -1,20 +1,19 @@
 from base_elemets import Div,Input,Button ,Form,Aside,Nav,Li,Ul,H1 # noqa: F403
+from common_components import page_template
+from microXTMX import app
 
-from html_builder import page, app
 
-
-@page("/")
+@app.page("/")
 async def _(request):
-    return Button("test",hx_get="/test")
+    return page_template(Button("test",hx_get="/test"))
 
-@page("/next")
+@app.page("/next")
 async def _(request):
-    return Div("next"),Div("ds"),Div("Sd")
+    return page_template(Div("next"),Div("sa"))
 
 
 @app.get("/test")
 async def _(request):
-    print("Hey")
     return 
 
 def run():

@@ -12,20 +12,8 @@ def navBar():
         )
     )
 
-def template(content):
-    return Html(
-        Head(
-            Script(src="public/gz/gz.htmx.min.js"),
-            Link(rel="stylesheet", href="public/gz/gz.pico.zinc.min.css"),
-        ),
-        Body(
-            Header(navBar(),klass="container"),
-            Main(
-                content,
+def page_template(*content):
+    return Header(navBar(),klass="container"),Main(*content,klass="container")
 
-            ),
-            klass="container"
-        ),
-        color_mode="user"
-    )
+
 
