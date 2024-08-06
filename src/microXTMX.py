@@ -55,6 +55,7 @@ app = MicroHTMX()
 @app.post("callbacks/<id>")
 async def _(request,id):
     body = {}
+    print(request.body)
     if request.body:
         body = {key:value for key,value in [p.split("=") for p in request.body.decode("utf-8").split("&")] }
     
