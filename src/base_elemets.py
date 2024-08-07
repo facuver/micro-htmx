@@ -41,10 +41,10 @@ class Element:
         if self.name in self.self_closing_tags:
             return open_tag
         
-        if not childs:
-            if self.name in self.always_closing_tags:
-                return f"{open_tag}</{self.name}>"
-            return open_tag
+        # if not childs:
+        #     if self.name in self.always_closing_tags:
+        #         return f"{open_tag}</{self.name}>"
+        #     return open_tag
         
         content = '\n'.join(
             child for child in childs
