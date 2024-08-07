@@ -7,6 +7,7 @@ def add_head(*content):
         Head(
             Script(src="public/gz/gz.htmx.min.js"),
             Link(rel="stylesheet", href="public/gz/gz.pico.zinc.min.css"),
+            '<script src="https://unpkg.com/htmx-ext-ws@2.0.0/ws.js"></script>'
         ),
         Body(
 
