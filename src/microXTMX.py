@@ -1,5 +1,7 @@
 
-from microdot.microdot import Microdot, Response, send_file,URLPattern
+import asyncio
+from lib.microdot.microdot import Microdot, Response, send_file,URLPattern 
+from lib.microdot.sse import with_sse, SSE
 from base_elemets import Element,Html,Head,Script,Link,Body
 
 def add_head(*content):
@@ -16,23 +18,23 @@ def add_head(*content):
             color_mode="user"
 
             ),
-        ),
-    
+        )
+Response.default_content_type = "text/html"
 class MicroHTMX(Microdot):
-    def route(self, url_pattern, methods=None):
-        def decorated(f):
-            async def r(*args,**kwargs):
-                resp = await f(*args,**kwargs)
-                if isinstance(resp, Response):
-                    return resp
-                if isinstance(resp,tuple):
-                    resp = " ".join(resp)
-                return Response(resp,headers={"Content-Type":"text/html"})
-            self.url_map.append(
-                ([m.upper() for m in (methods or ['GET'])],
-                 URLPattern(url_pattern), r))
-            return r
-        return decorated
+    # def route(self, url_pattern, methods=None):
+    #     def decorated(f):
+    #         async def r(*args,**kwargs):
+    #             resp = await f(*args,**kwargs)
+    #             if isinstance(resp, Response):
+    #                 return resp
+    #             # if isinstance(resp,tuple):
+    #             #     resp = " ".join(resp)
+    #             return Response(resp,headers={"Content-Type":"text/html"})
+    #         self.url_map.append(
+    #             ([m.upper() for m in (methods or ['GET'])],
+    #              URLPattern(url_pattern), r))
+    #         return r
+    #     return decorated
     
 
     def page(self,path):
@@ -65,6 +67,15 @@ async def _(request,id):
         return resp
     return 
 
+@app.route('/events')
+@with_sse
+async def events(request, sse:SSE):
+    # send an unnamed event with string data
+    for i in range(20):
+        await asyncio.sleep(.11)
+        await sse.send(f'hello {i}', event='message')
+    await sse.send("Net")
+    await sse.send("Net",event="close")
 
 @app.route("public/gz/<file>")
 async def _(request, file):

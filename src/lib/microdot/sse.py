@@ -1,6 +1,7 @@
 import asyncio
 import json
 from microdot.helpers import wraps
+from microdot import Response
 
 
 class SSE:
