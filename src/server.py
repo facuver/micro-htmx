@@ -1,77 +1,56 @@
-import asyncio
-import gc
-from lib.ringbuf_queue import RingbufQueue as Queue
-from base_elemets import Div, Input, Button, Form, Aside, Nav, Li, Ul, H1, Span  # noqa: F403
+from base_elemets import (
+    Div,
+    Input,
+    Button,
+    Form,
+    Aside,
+    Nav,
+    Li,
+    Ul,
+    H1,
+    Span,
+)  # noqa: F403
 from common_components import page_template
 from microXTMX import app
 from lib.microdot.websocket import with_websocket, WebSocket
-from lib.microdot.microdot import Request
+import asyncio
 
-
-
-ws_queues:dict[Request:asyncio.Queue] = {}
 class State:
-    value = 10
-    callbacks = []
+    def __init__(self,callback,data=None) -> None:
+        self.data = data
+        self.notify = callback
 
-    @classmethod
-    def set_state(cls, value):
-        cls.value = value
-        print(value)
-        for c in cls.callbacks:
-            c(cls)
+    def set_data(self,value):
+        self.data = value
+        print("Set")
+        self.notify(self.data)
 
-def reactive(f):
-    State.callbacks.append(lambda x: (f(x)))
-    return f
+sse_queue = asyncio.Queue(maxsize=20)
+
+def reactive(data):
+    d=  Span(
+        Div(f"watijg {data}",
+            id="test123"), 
+        hx_ext="ws", ws_connect="/echo")
+    return d
+
+state  = State(reactive,2)
 
 
-@reactive
-def Test(v: State):
-    return H1(str(v.value), id="id-"+str(id(State)))
 
-@app.after_request
-def _(r,res):
-    gc.collect()
+@app.route("/echo")
+@with_websocket
+async def echo(request, ws:WebSocket):
+    while True:
+        ws.send(await sse_queue.get())
+
 
 @app.page("/")
 async def _(request):
     return page_template(
-        Span(hx_ext="ws", ws_connect="/ws"),
-        Test(State),
-        Test(State),
-        Button("ADD", callback=lambda x: State.set_state(State.value + 1)),
+        reactive("2"),
+        Button("SEND", callback=lambda x:state.set_data(11))
     )
-
-
-@app.page("/next")
-async def _(request):
-    return page_template("Next")
-
-def dispatch_to_ws(obj):
-
-    for q in ws_queues.values():
-        try:
-            q.put_nowait(obj)
-        except IndexError:
-            print("Full queue")
-
-
-@app.get("/ws")
-@with_websocket
-async def _(request:Request, ws: WebSocket):
-    my_queue = Queue(20)
-    
-    ws_queues[request] = my_queue
-    try: 
-        while True:
-            f = await my_queue.get()
-
-            print(f)
-            await ws.send(f)
-            # await ws.close()
-    except:
-        ws_queues.popitem(request)
 
 
 def run():
