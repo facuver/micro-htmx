@@ -1,77 +1,81 @@
+from microdot.microdot import Microdot, Response, send_file, URLPattern
+from base_elemets import Element, Html, Head, Script, Link, Body
+from state import ws_sender
 
-import asyncio
-from lib.microdot.microdot import Microdot, Response, send_file,URLPattern 
-from lib.microdot.sse import with_sse, SSE
-from base_elemets import Element,Html,Head,Script,Link,Body
 
 def add_head(*content):
-    return Html(
-        Head(
-            Script(src="public/gz/gz.htmx.min.js"),
-            Link(rel="stylesheet", href="public/gz/gz.pico.zinc.min.css"),
-            '<script src="https://unpkg.com/htmx-ext-ws@2.0.0/ws.js"></script>'
-        ),
-        Body(
-
-            *content,
-            klass="container",
-            color_mode="user"
-
+    return (
+        Html(
+            Head(
+                Script(src="public/gz/gz.htmx.min.js"),
+                Script(src="public/gz/gz.ws.js"),
+                Link(rel="stylesheet", href="public/gz/gz.pico.zinc.min.css"),
             ),
-        )
-Response.default_content_type = "text/html"
-class MicroHTMX(Microdot):
-    # def route(self, url_pattern, methods=None):
-    #     def decorated(f):
-    #         async def r(*args,**kwargs):
-    #             resp = await f(*args,**kwargs)
-    #             if isinstance(resp, Response):
-    #                 return resp
-    #             # if isinstance(resp,tuple):
-    #             #     resp = " ".join(resp)
-    #             return Response(resp,headers={"Content-Type":"text/html"})
-    #         self.url_map.append(
-    #             ([m.upper() for m in (methods or ['GET'])],
-    #              URLPattern(url_pattern), r))
-    #         return r
-    #     return decorated
-    
+            Body(*content, klass="container", color_mode="user"),
+        ),
+    )
 
-    def page(self,path):
+
+class MicroHTMX(Microdot):
+    def route(self, url_pattern, methods=None):
+        def decorated(f):
+            async def r(*args, **kwargs):
+                resp = await f(*args, **kwargs)
+                if isinstance(resp, Response):
+                    return resp
+                if isinstance(resp, tuple):
+                    resp = " ".join(resp)
+                return Response(resp, headers={"Content-Type": "text/html"})
+
+            self.url_map.append(
+                ([m.upper() for m in (methods or ["GET"])], URLPattern(url_pattern), r)
+            )
+            return r
+
+        return decorated
+
+    def page(self, path):
         def decorator(f):
             @self.get(path)
-            async def decorated(*args,**kwargs):
-                resp = await f(*args,**kwargs)
-                if isinstance(resp,tuple):
+            async def decorated(*args, **kwargs):
+                resp = await f(*args, **kwargs)
+                if isinstance(resp, tuple):
                     resp = " ".join(resp)
                 return add_head(resp)
+
             return decorated
+
         return decorator
-    
-    
+
+
 app = MicroHTMX()
 
 
+app.url_map.append(("GET", URLPattern("/ws"), ws_sender))
 
 
-        
 @app.post("callbacks/<id>")
-async def _(request,id):
+async def _(request, id):
     body = {}
     if request.body:
-        body = {key:value for key,value in [p.split("=") for p in request.body.decode("utf-8").split("&")] }
-    
+        body = {
+            key: value
+            for key, value in [
+                p.split("=") for p in request.body.decode("utf-8").split("&")
+            ]
+        }
+
     resp = Element.callbacks_map[id](body)
-    if isinstance(resp,str):
+    if isinstance(resp, str):
         return resp
-    return 
+    return
 
 
 @app.route("public/gz/<file>")
 async def _(request, file):
-    return send_file(f"./public/gz/{file}",compressed=True)
+    return send_file(f"./public/gz/{file}", compressed=True)
+
 
 @app.get("public/<file>")
 async def _(request, file):
     return send_file(f"./public/{file}")
-
