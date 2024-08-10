@@ -1,5 +1,5 @@
 from typing import TypedDict ,Literal
-from typing_extensions import Unpack
+from typing_extensions import Unpack # type: ignore
 
 class KWARGS(TypedDict):
     hx_get: str
@@ -30,10 +30,18 @@ class Element:
         # Convert kwargs keys from underscore to hyphen and handle 'klass'
         converted_kwargs = {}
         for key, value in kwargs.items():
+            if value is False:
+                value = "false"
+            if value is True:
+                value ="true"
+                
             if key == 'klass':
                 converted_kwargs['class'] = value
             else:
                 converted_kwargs[key.replace('_', '-')] = value
+
+
+        
         
         attrs = ' '.join(args + [f"{key}='{val}'" for key, val in converted_kwargs.items()])
         open_tag = f"<{self.name}{' ' + attrs if attrs else ''}>"

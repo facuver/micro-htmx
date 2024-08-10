@@ -13,7 +13,7 @@ def navBar():
     )
 
 def page_template(*content):
-    return Header(navBar(),klass="container"),Main(*content,klass="container")
+    return Header(navBar(),klass="container")+Main(*content,klass="container")
 
 
 
