@@ -97,7 +97,6 @@ t = Todos([Todo(f"Todo {i}", i%2 == 0, dispatch_func=dispatch) for i in range(20
 
 @app.page("/")
 async def _(request):
-
     return page_template(
         Span(hx_ext="ws", ws_connect="/echo"),
         t()
