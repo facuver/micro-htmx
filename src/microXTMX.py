@@ -1,6 +1,6 @@
-from microdot.microdot import Microdot, Response, send_file, URLPattern
+from microdot.microdot import Microdot, Response, send_file, URLPattern,redirect
 from base_elemets import Element, Html, Head, Script, Link, Body
-from state import ws_sender
+from state import ws_sender,ws_reciver
 
 
 def add_head(*content):
@@ -10,8 +10,9 @@ def add_head(*content):
                 Script(src="public/gz/gz.htmx.min.js"),
                 Script(src="public/gz/gz.ws.js"),
                 Link(rel="stylesheet", href="public/gz/gz.pico.zinc.min.css"),
+                
             ),
-            Body(*content, klass="container", color_mode="user"),
+            Body(*content, klass="container", ),       
         ),
     )
 
@@ -51,24 +52,27 @@ class MicroHTMX(Microdot):
 app = MicroHTMX()
 
 
-app.url_map.append(("GET", URLPattern("/ws"), ws_sender))
+app.url_map.append(("GET", URLPattern("/ws_updates"), ws_sender))
+app.url_map.append(("GET", URLPattern("/ws_callbacks"), ws_reciver))
 
 
 @app.post("callbacks/<id>")
 async def _(request, id):
-    body = {}
-    print(request.body)
-    if request.body:
-        body = {
-            key: value
-            for key, value in [
-                p.split("=") for p in request.body.decode("utf-8").split("&")
-            ]
-        }
+    try:
+        body = {}
+        if request.body:
+            body = {
+                key: value
+                for key, value in [
+                    p.split("=") for p in request.body.decode("utf-8").split("&")
+                ]
+            }
 
-    resp = Element.callbacks_map[id](body)
-    if isinstance(resp, str):
-        return resp
+        resp = Element.callbacks_map[id](body)
+        if isinstance(resp, str):
+            return resp
+    except KeyError:
+        return """<meta http-equiv="refresh" content="0" >"""
     return
 
 

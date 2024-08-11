@@ -1,4 +1,4 @@
-from base_elemets import Html,Head,Script,Link,Title,Body,Main,Header,Footer,Nav,Ul,Li,A,Strong,Style,Div
+from base_elemets import Html,Head,Script,Link,Title,Body,Main,Header,Footer,Nav,Ul,Li,A,Strong,Style,Div,Span
 
 def navBar():
     return  Nav(
@@ -13,7 +13,8 @@ def navBar():
     )
 
 def page_template(*content):
-    return Header(navBar(),klass="container")+Main(*content,klass="container")
+    return Header(navBar(),klass="container")+Span( hx_ext="ws", ws_connect="/ws_updates")+Main(*content,klass="container", hx_ext="ws", ws_connect="/ws_callbacks")
+
 
 
 
