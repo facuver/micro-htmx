@@ -77,7 +77,7 @@ def delete(todo):
 class Todo(State):
     def __init__(self,label,done=False,dispatch_func= None) -> None:
         super().__init__()
-        self.label = label
+        self.label = new_todo
         self.done = done
         self.callback = dispatch_func
 
@@ -103,8 +103,14 @@ async def _(request):
 
     )
 
+@app.delete("/todos/<todo_id>")
+async def _(req,todo_id):
+    todos.remove(todo_id)
+
+
 
 def run():
+    print(gc.mem_free())
     app.run(debug=True)
 
 
