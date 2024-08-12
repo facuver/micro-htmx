@@ -9,79 +9,84 @@ from base_elemets import (
     Ul,
     H1,
     Span,
+    render_html,
 )  # noqa: F403
 from common_components import page_template
-from microXTMX import app
-from lib_src.microdot.websocket import with_websocket, WebSocket
+from microXTMX import app, add_head
 import asyncio
-from typing import Any
-from state import State,dispatch_to_ws
+from state import Reactive
 
 
-class Todos(State):
-    def __init__(self,todos=[],dispatch_func= None) -> None:
+class Todos(Reactive):
+    def __init__(self, todos=[]) -> None:
         super().__init__()
         self.todos = todos
-        self.callback = dispatch_func
-        self.init()
- 
+
     def render(self):
         return Div(
             *[t() for t in self.todos],
         )
-    
 
     def add(self, tod):
         self.todos += [tod]
 
 
-
-
 def delete_todo(todo):
-    t.todos =list(filter(lambda x:x.id!=todo.id, t.todos))
+    t0.todos = list(filter(lambda x: x.id != todo.id, t0.todos))
 
-class Todo(State):
-    def __init__(self,label,done=False,dispatch_func= None) -> None:
+
+class Todo(Reactive):
+    def __init__(self, label, done=False) -> None:
         super().__init__()
         self.label = label
         self.done = done
-        self.init()
 
     def render(self):
-        return Div(Div(self.label + ( " ✅" if self.done else " ⏹️") ,Span("❌",callback=self.delete) if self.done else ""  ,callback=self.toggle) , role="group")
+        return Div(
+            Div(
+                self.label + (" ✅" if self.done else " ⏹️"),
+                Span("❌", callback=self.delete) if self.done else "",
+                callback=self.toggle,
+            ),
+            role="group",
+        )
 
-    def delete(self,x):
+    def delete(self, x):
         delete_todo(self)
 
-    def toggle(self,obj):
+    def toggle(self, obj):
         self.done = not self.done
 
 
+t0 = Todos([Todo(f"Todo {i}", i % 2 == 0) for i in range(5)])
 
 
 
 
-t = Todos([Todo(f"Todo {i}", i%2 == 0) for i in range(10)])
 def AddTodo():
     def add(x):
-        t.add(Todo(x["new_todo"]))
+        t0.add(Todo(x["new_todo"]))
         return AddTodo()
 
-    return Input(placeholder="Add Todo...", value="",id="new_todo", name = "new_todo", hx_on_after_request='alert(\'tatt\')' , callback=add)
-
-@app.page("/")
-async def _(request):
-    return page_template(
-        AddTodo(),
-        t()
-
+    return Input(
+        placeholder="Add Todo...",
+        value="",
+        id="new_todo",
+        name="new_todo",
+        hx_on__before_request='alert("Making a request!")',
+        callback=add,
     )
+
+
+@app.get("/")
+async def _(request):
+    return add_head(page_template(t0()))
+
 
 
 
 
 def run():
-
     app.run(debug=True)
 
 

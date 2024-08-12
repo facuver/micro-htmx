@@ -14,7 +14,7 @@ class KWARGS(TypedDict):
     value:str
     klass:str
 
-class Element:
+class Element_old:
     callbacks_map = {}
     self_closing_tags = {'img', 'input', 'br', 'hr', 'meta', 'link'}
     always_closing_tags = {'script', 'style','div'}
@@ -31,7 +31,6 @@ class Element:
             Element.callbacks_map[el_id] = callback
             kwargs["ws-send"]="true"
             kwargs["name"]=el_id
-            print(len(Element.callbacks_map))
         # Convert kwargs keys from underscore to hyphen and handle 'klass'
         converted_kwargs = {}
         for key, value in kwargs.items():
@@ -63,16 +62,75 @@ class Element:
         )
         
         return f"{open_tag}\n{content}</{self.name}>"
+      
+class Element:
+    callbacks_map = {}
+    self_closing_tags = {'img', 'input', 'br', 'hr', 'meta', 'link'}
+    always_closing_tags = {'script', 'style', 'div'}
+
+    def __init__(self, name):
+        self.name = name
+   
+
+   
+    def __call__(self, *childs, callback=None, args=[], **kwargs):
+        return "".join(self._render(childs, callback, args, kwargs))
+    
+    def _render(self, childs, callback, args, kwargs):
+        if callback:
+            el_id = kwargs.get("id", hex(id(callback)))
+            Element.callbacks_map[el_id] = callback
+            kwargs["ws-send"] = "true"
+            kwargs["name"] = el_id
         
+        resp =  f"<{self.name}"
+        
+        for key, value in kwargs.items():
+            if value is False:
+                value = "false"
+            elif value is True:
+                value = "true"
+            
+            if key == 'klass':
+                resp += f" class='{value}'"
+            else:
+                resp += f" {key.replace('_', '-')}='{value}'"
+        
+        for arg in args:
+            resp += f" {arg}"
+        
+        if self.name in self.self_closing_tags:
+            resp += "/>"
+            yield resp
+            return
+        
+        resp += ">\n"
+        yield resp
+            
+        for child in childs:
+            if isinstance(child, str):
+                yield str(child)
+            else:
+                yield from child
+        
+        yield f"</{self.name}>"
+
 
 class Html(Element):
     def __init__(self):
         super().__init__('html')
-
+    
     def __call__(self, *childs, args=[], **kwargs):
-        doctype = "<!DOCTYPE html>"
-        html_content = super().__call__(*childs, args=args, **kwargs)
-        return f"{doctype}\n{html_content}"
+        yield "<!DOCTYPE html>"
+        yield from super()._render(childs, None, args, kwargs)
+    
+
+def chain(*iterators):
+    for i in iterators:
+        yield from i
+
+def render_html(generator):
+    return ''.join(generator)
 
 # Basic HTML tags
 Html = Html()

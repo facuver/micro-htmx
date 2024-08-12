@@ -4,8 +4,7 @@ from state import ws_sender,ws_reciver
 
 
 def add_head(*content):
-    return (
-        Html(
+    return  Html(
             Head(
                 Meta(charset="UTF-8"),
                 Script(src="public/gz/gz.htmx.min.js"),
@@ -14,36 +13,33 @@ def add_head(*content):
                 
             ),
             Body(*content, klass="container", ),       
-        ),
-    )
-
-
+            
+        )
 class MicroHTMX(Microdot):
-    def route(self, url_pattern, methods=None):
-        def decorated(f):
-            async def r(*args, **kwargs):
-                resp = await f(*args, **kwargs)
-                if isinstance(resp, Response):
-                    return resp
-                if isinstance(resp, tuple):
-                    resp = " ".join(resp)
-                return Response(resp, headers={"Content-Type": "text/html"})
+    # def route(self, url_pattern, methods=None):
+    #     def decorated(f):
+    #         async def r(*args, **kwargs):
+    #             resp = await f(*args, **kwargs)
+    #             if isinstance(resp, Response):
+    #                 return resp
+    #             if isinstance(resp, tuple):
+    #                 resp = " ".join(resp)
+    #             return Response(resp, headers={"Content-Type": "text/html"})
 
-            self.url_map.append(
-                ([m.upper() for m in (methods or ["GET"])], URLPattern(url_pattern), r)
-            )
-            return r
+    #         self.url_map.append(
+    #             ([m.upper() for m in (methods or ["GET"])], URLPattern(url_pattern), r)
+    #         )
+    #         return r
 
-        return decorated
+    #     return decorated
+    Response.default_content_type = "text/html"
 
     def page(self, path):
         def decorator(f):
             @self.get(path)
             async def decorated(*args, **kwargs):
                 resp = await f(*args, **kwargs)
-                if isinstance(resp, tuple):
-                    resp = " ".join(resp)
-                return add_head(resp)
+                return Response(add_head(resp),headers={"Content-Type":"text/html"})
 
             return decorated
 
