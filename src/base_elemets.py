@@ -23,8 +23,8 @@ class Element:
     
     def __call__(self, *childs, callback=None,args=[], **kwargs:Unpack[KWARGS]):
         if callback:
-            id_int = id(callback)
-            Element.callbacks_map[str(id_int)] = callback
+            id_int = hex(hash(callback))
+            Element.callbacks_map[id_int] = callback
             kwargs["hx_post"]=f"/callbacks/{id_int}"
 
         # Convert kwargs keys from underscore to hyphen and handle 'klass'

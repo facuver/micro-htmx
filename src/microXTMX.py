@@ -58,7 +58,6 @@ app = MicroHTMX()
 @app.post("callbacks/<id>")
 async def _(request,id):
     body = {}
-    print(request.body)
     if request.body:
         body = {key:value for key,value in [p.split("=") for p in request.body.decode("utf-8").split("&")] }
     
@@ -67,15 +66,6 @@ async def _(request,id):
         return resp
     return 
 
-@app.route('/events')
-@with_sse
-async def events(request, sse:SSE):
-    # send an unnamed event with string data
-    for i in range(20):
-        await asyncio.sleep(.11)
-        await sse.send(f'hello {i}', event='message')
-    await sse.send("Net")
-    await sse.send("Net",event="close")
 
 @app.route("public/gz/<file>")
 async def _(request, file):
