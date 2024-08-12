@@ -32,10 +32,6 @@ class Element:
         # Convert kwargs keys from underscore to hyphen and handle 'klass'
         converted_kwargs = {}
         for key, value in kwargs.items():
-            if value is False:
-                value = "false"
-            if value is True:
-                value ="true"
 
             if value is False:
                 value = "false"
