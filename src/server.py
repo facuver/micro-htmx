@@ -111,6 +111,7 @@ async def _(req,todo_id):
 
 def run():
     print(gc.mem_free())
+    print(gc.mem_free())
     app.run(debug=True)
 
 

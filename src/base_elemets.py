@@ -1,6 +1,9 @@
 from lib.typing import TypedDict ,Literal
 from lib.typing_extensions import Unpack # type: ignore
 import gc
+from lib.typing import TypedDict ,Literal
+from lib.typing_extensions import Unpack # type: ignore
+import gc
 class KWARGS(TypedDict):
     hx_get: str
     hx_post: str
@@ -22,6 +25,7 @@ class Element:
         self.name = name
     
     def __call__(self, *childs, callback=None, args=[], **kwargs:Unpack[KWARGS]):
+    def __call__(self, *childs, callback=None, args=[], **kwargs:Unpack[KWARGS]):
         if callback:
             id_int = hex(hash(callback))
             Element.callbacks_map[id_int] = callback
@@ -35,10 +39,18 @@ class Element:
             if value is True:
                 value ="true"
 
+            if value is False:
+                value = "false"
+            if value is True:
+                value ="true"
+
             if key == 'klass':
                 converted_kwargs['class'] = value
             else:
                 converted_kwargs[key.replace('_', '-')] = value
+
+
+        
 
 
         
