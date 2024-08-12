@@ -31,6 +31,9 @@ class Todos(State):
         )
     
 
+    def add(self, tod):
+        self.todos += [tod]
+
 
 
 
@@ -45,7 +48,7 @@ class Todo(State):
         self.init()
 
     def render(self):
-        return Div(self.label + ( " ✅" if self.done else "") ,Div("X",callback=self.delete) )
+        return Div(Div(self.label + ( " ✅" if self.done else " ⏹️") ,Span("❌",callback=self.delete) if self.done else ""  ,callback=self.toggle) , role="group")
 
     def delete(self,x):
         delete_todo(self)
@@ -63,6 +66,7 @@ t = Todos([Todo(f"Todo {i}", i%2 == 0) for i in range(10)])
 @app.page("/")
 async def _(request):
     return page_template(
+        Input(placeholder="Add Todo..." , callback=lambda x: t.add(Todo(x.items()[0]))),
         t()
 
     )

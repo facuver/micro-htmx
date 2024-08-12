@@ -28,7 +28,7 @@ class Element:
             Element.callbacks_map[el_id] = callback
             kwargs["ws-send"]="true"
             kwargs["name"]=el_id
-
+            print(len(Element.callbacks_map))
         # Convert kwargs keys from underscore to hyphen and handle 'klass'
         converted_kwargs = {}
         for key, value in kwargs.items():
