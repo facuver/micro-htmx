@@ -12,33 +12,10 @@ from base_elemets import (
 )  # noqa: F403
 from common_components import page_template
 from microXTMX import app
-from lib.microdot.websocket import with_websocket, WebSocket
+from lib_src.microdot.websocket import with_websocket, WebSocket
 import asyncio
-
 from typing import Any
-from typing_extensions import Unpack
-
-
-from base_elemets import KWARGS
-
-
-class State():
-
-    def __init__(self) -> None:
-        self.callback = None
-        self.id = "id-" + str(id(self))
-
-    def render(self):
-        raise NotImplementedError
-
-    def __call__(self, *args: Any, **kwds: Any) -> Any:
-        return self.render().replace(">",f" id={self.id}>",1)
-    
-
-    def __setattr__(self, name: str, value: Any) -> None:
-        self.__dict__[name]= value
-        if self.callback:
-            self.callback(self())
+from state import State,dispatch_to_ws
 
 
 class Todos(State):
@@ -46,44 +23,32 @@ class Todos(State):
         super().__init__()
         self.todos = todos
         self.callback = dispatch_func
+        self.init()
  
     def render(self):
         return Div(
             *[t() for t in self.todos],
         )
-
-
     
 
 
-ws_send_queue = asyncio.Queue(maxsize=10)
-def dispatch(obj):
-    try:
-        ws_send_queue.put_nowait(obj)
-    except:
-        print("queue full")
-
-@app.route("/echo")
-@with_websocket
-async def echo(request, ws:WebSocket):
-    while True:
-        await ws.send(await ws_send_queue.get())
 
 
-
-def delete(todo):
+def delete_todo(todo):
     t.todos =list(filter(lambda x:x.id!=todo.id, t.todos))
 
 class Todo(State):
     def __init__(self,label,done=False,dispatch_func= None) -> None:
         super().__init__()
-        self.label = new_todo
+        self.label = label
         self.done = done
-        self.callback = dispatch_func
+        self.init()
 
     def render(self):
-        return Div(self.label + ( " ✅" if self.done else "") , callback=lambda x:delete(self)  )
+        return Div(self.label + ( " ✅" if self.done else "") ,Div("X",callback=self.delete) )
 
+    def delete(self,x):
+        delete_todo(self)
 
     def toggle(self,obj):
         self.done = not self.done
@@ -93,25 +58,20 @@ class Todo(State):
 
 
 
-t = Todos([Todo(f"Todo {i}", i%2 == 0, dispatch_func=dispatch) for i in range(20)],dispatch_func=dispatch)
+t = Todos([Todo(f"Todo {i}", i%2 == 0) for i in range(10)])
 
 @app.page("/")
 async def _(request):
     return page_template(
-        Span(hx_ext="ws", ws_connect="/echo"),
         t()
 
     )
 
-@app.delete("/todos/<todo_id>")
-async def _(req,todo_id):
-    todos.remove(todo_id)
 
 
 
 def run():
-    print(gc.mem_free())
-    print(gc.mem_free())
+
     app.run(debug=True)
 
 

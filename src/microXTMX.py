@@ -69,9 +69,11 @@ async def _(request, id):
             }
 
         resp = Element.callbacks_map[id](body)
+
         if isinstance(resp, str):
             return resp
     except KeyError:
+        print("keyError")
         return """<meta http-equiv="refresh" content="0" >"""
     return
 

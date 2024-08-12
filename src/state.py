@@ -1,32 +1,39 @@
 import asyncio
 from base_elemets import Span,Element
-from microdot.websocket import with_websocket, WebSocket
-from microdot.microdot import Request
-from ringbuf_queue import RingbufQueue as Queue
+from lib_src.microdot.websocket import with_websocket, WebSocket, WebSocketError
+from lib_src.microdot.microdot import Request
+from lib_src.ringbuf_queue import RingbufQueue as Queue
 import json
 
 class State(object):
     def __init__(self) -> None:
-        # self.event = asyncio.Event()
-        self.callbacks = []
+        self.callback = None
+        self.id = "id1-" + str(id(self))
 
+    def init(self):
+        self.callback = dispatch_to_ws
+
+    def render(self):
+        raise NotImplementedError
+
+    def __call__(self, *args, **kwds):
+        return Span(self.render(),id=self.id) #.replace(">",f" id={self.id}>",1)
+    
     def __setattr__(self,name,value):
         super().__setattr__(name,value)
-        print(name,self.callbacks)
-        for c in self.callbacks:
-            c()
-        # self.event.set()
+        if self.callback:
+            self.callback(self())
 
 
 
-def reactive(f):
-    def decorted(obj:State , *args,**kwargs):
-        def add_id():
-            return f(obj,*args,**kwargs).replace( ">" ," id='id-"+str(id(obj)) + "' >" , 1)
-        obj.callbacks.append(lambda:dispatch_to_ws(add_id()))
-        return add_id()
+# def reactive(f):
+#     def decorted(obj:State , *args,**kwargs):
+#         def add_id():
+#             return f(obj,*args,**kwargs).replace( ">" ," id='id-"+str(id(obj)) + "' >" , 1)
+#         obj.callbacks.append(lambda:dispatch_to_ws(add_id()))
+#         return add_id()
 
-    return decorted
+#     return decorted
 
 
 send_queue = Queue(5)
@@ -38,17 +45,25 @@ def dispatch_to_ws(obj):
 
 @with_websocket
 async def ws_sender(request:Request, ws: WebSocket):
-    while True:
-        f = await send_queue.get()
-        await ws.send(f)
-
+    try:
+        while True:
+            await ws.send(await send_queue.get())
+    except:
+        print("connection close")
+        await ws.close()
 
 @with_websocket
 async def ws_reciver(request:Request,ws:WebSocket):
-    while True:
-        data = json.loads(await ws.receive())
-        print( data)
-        headers = data.pop('HEADERS')
-        if headers["HX-Target"] in  Element.callbacks_map:
-            
-            Element.callbacks_map[headers["HX-Target"]](data)
+
+    try:
+      while True:
+            data = json.loads(await ws.receive())
+            print(data)
+            headers = data.pop('HEADERS')
+            if headers["HX-Trigger-Name"] in  Element.callbacks_map:
+                Element.callbacks_map[headers["HX-Trigger-Name"]](data)
+            else:
+                print("Callback not found")
+    except WebSocketError:
+        print("connection close reciver")
+        await ws.close()

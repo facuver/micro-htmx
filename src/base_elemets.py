@@ -1,9 +1,7 @@
-from lib.typing import TypedDict ,Literal
-from lib.typing_extensions import Unpack # type: ignore
+from typing import TypedDict ,Literal
+from typing_extensions import Unpack # type: ignore
 import gc
-from lib.typing import TypedDict ,Literal
-from lib.typing_extensions import Unpack # type: ignore
-import gc
+
 class KWARGS(TypedDict):
     hx_get: str
     hx_post: str
@@ -25,11 +23,11 @@ class Element:
         self.name = name
     
     def __call__(self, *childs, callback=None, args=[], **kwargs:Unpack[KWARGS]):
-    def __call__(self, *childs, callback=None, args=[], **kwargs:Unpack[KWARGS]):
         if callback:
-            id_int = hex(hash(callback))
-            Element.callbacks_map[id_int] = callback
-            kwargs["hx_post"]=f"/callbacks/{id_int}"
+            el_id = hex(hash(callback))
+            Element.callbacks_map[el_id] = callback
+            kwargs["ws-send"]="true"
+            kwargs["name"]=el_id
 
         # Convert kwargs keys from underscore to hyphen and handle 'klass'
         converted_kwargs = {}
