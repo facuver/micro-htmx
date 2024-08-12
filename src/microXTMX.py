@@ -1,5 +1,5 @@
 from microdot.microdot import Microdot, Response, send_file, URLPattern,redirect
-from base_elemets import Element, Html, Head, Script, Link, Body
+from base_elemets import Element, Html, Head, Script, Link, Body,Meta
 from state import ws_sender,ws_reciver
 
 
@@ -7,6 +7,7 @@ def add_head(*content):
     return (
         Html(
             Head(
+                Meta(charset="UTF-8"),
                 Script(src="public/gz/gz.htmx.min.js"),
                 Script(src="public/gz/gz.ws.js"),
                 Link(rel="stylesheet", href="public/gz/gz.pico.zinc.min.css"),

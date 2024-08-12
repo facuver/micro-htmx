@@ -36,20 +36,25 @@ class State(object):
 #     return decorted
 
 
-send_queue = Queue(5)
+send_queue = {}
 def dispatch_to_ws(obj):    
-    try:
-        send_queue.put_nowait(obj)
-    except IndexError:
-        print("queue full")
+    for r,q in send_queue.items():
+        try:
+            q.put_nowait(obj)
+        except IndexError:
+            print("queue full")
 
 @with_websocket
 async def ws_sender(request:Request, ws: WebSocket):
+    my_q= Queue(5)
+    send_queue[request] = my_q
     try:
         while True:
-            await ws.send(await send_queue.get())
-    except:
-        print("connection close")
+            data = await my_q.get()
+            print(data[20:])
+            await ws.send(data)
+    except Exception as e:
+        print("connection close", e)
         await ws.close()
 
 @with_websocket
