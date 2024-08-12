@@ -62,11 +62,17 @@ class Todo(State):
 
 
 t = Todos([Todo(f"Todo {i}", i%2 == 0) for i in range(10)])
+def AddTodo():
+    def add(x):
+        t.add(Todo(x["new_todo"]))
+        return AddTodo()
+
+    return Input(placeholder="Add Todo...", value="",id="new_todo", name = "new_todo", hx_on_after_request='alert(\'tatt\')' , callback=add)
 
 @app.page("/")
 async def _(request):
     return page_template(
-        Input(placeholder="Add Todo..." , callback=lambda x: t.add(Todo(x.items()[0]))),
+        AddTodo(),
         t()
 
     )

@@ -51,7 +51,6 @@ async def ws_sender(request:Request, ws: WebSocket):
     try:
         while True:
             data = await my_q.get()
-            print(data[20:])
             await ws.send(data)
     except Exception as e:
         print("connection close", e)

@@ -24,7 +24,10 @@ class Element:
     
     def __call__(self, *childs, callback=None, args=[], **kwargs:Unpack[KWARGS]):
         if callback:
-            el_id = hex(hash(callback))
+            if "id" in kwargs:
+                el_id = kwargs["id"]
+            else:
+                el_id = hex(hash(callback))
             Element.callbacks_map[el_id] = callback
             kwargs["ws-send"]="true"
             kwargs["name"]=el_id
