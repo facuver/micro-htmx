@@ -10,8 +10,8 @@ class State(object):
         self.callback = None
         self.id = "id1-" + str(id(self))
 
-    def init(self):
-        self.callback = dispatch_to_ws
+    # def init(self):
+    #     self.callback = dispatch_to_ws
 
     def render(self):
         raise NotImplementedError
@@ -37,10 +37,12 @@ class State(object):
 
 
 send_queue = {}
-def dispatch_to_ws(obj):    
+def dispatch_to_ws(obj):   
+    data = "".join(obj) 
+    print(data)
     for r,q in send_queue.items():
         try:
-            q.put_nowait(obj)
+            q.put_nowait(data)
         except IndexError:
             print("queue full")
 
@@ -65,9 +67,14 @@ async def ws_reciver(request:Request,ws:WebSocket):
             print(data)
             headers = data.pop('HEADERS')
             if headers["HX-Trigger-Name"] in  Element.callbacks_map:
-                Element.callbacks_map[headers["HX-Trigger-Name"]](data)
+                res = Element.callbacks_map[headers["HX-Trigger-Name"]](data)
             else:
                 print("Callback not found")
+
+            if res:
+                dispatch_to_ws(res)
     except WebSocketError:
         print("connection close reciver")
         await ws.close()
+
+        

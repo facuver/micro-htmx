@@ -1,19 +1,22 @@
 from base_elemets import Html,Head,Script,Link,Title,Body,Main,Header,Footer,Nav,Ul,Li,A,Strong,Style,Div,Span
 
-def navBar():
+def navBar(path):
+    print(path)
     return  Nav(
         Ul(
-            Li(Strong("RP2040"))
+            Li(Strong("RP2040" + " > " + path))
         ),
         Ul(
-            Li(A("About", klass="contrart",href="/")),
-            Li(A("State", klass="contrart",href="/next")),
-            Li(A("GPIO", klass="contrart",href="#"))
+            Li(A("About", klass="contrart " , href="/")),
+            Li(A("State", klass="contrart" , href="/next")),
+            Li(A("GPIO", klass="contrart" ,  href="#"))
         )
     )
 
-def page_template(*content):
-    return Header(navBar(),klass="container")+Span( hx_ext="ws", ws_connect="/ws_updates")+Main(*content,klass="container", hx_ext="ws", ws_connect="/ws_callbacks")
+def page_template(*content , request):
+    yield from Header(navBar(request.path),klass="container")
+    yield from Span( hx_ext="ws", ws_connect="/ws_updates")
+    yield from Main(*content,klass="container", hx_ext="ws", ws_connect="/ws_callbacks")
 
 
 

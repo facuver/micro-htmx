@@ -1,21 +1,12 @@
-from base_elemets import (
-    Div,
-    Input,
-    Button,
-    Form,
-    Aside,
-    Nav,
-    Li,
-    Ul,
-    H1,
-    Span,
-)  # noqa: F403
+from base_elemets import *# noqa: F403
 from common_components import page_template
-from microXTMX import app
+from microXTMX import app , add_head
 from lib_src.microdot.websocket import with_websocket, WebSocket
 import asyncio
 from typing import Any
 from state import State,dispatch_to_ws
+
+
 
 
 class Todos(State):
@@ -23,7 +14,7 @@ class Todos(State):
         super().__init__()
         self.todos = todos
         self.callback = dispatch_func
-        self.init()
+        # self.init()
  
     def render(self):
         return Div(
@@ -35,7 +26,9 @@ class Todos(State):
         self.todos += [tod]
 
 
-
+@app.get("/todo")
+def _(request):
+    return Span("")
 
 def delete_todo(todo):
     t.todos =list(filter(lambda x:x.id!=todo.id, t.todos))
@@ -45,22 +38,23 @@ class Todo(State):
         super().__init__()
         self.label = label
         self.done = done
-        self.init()
 
     def render(self):
-        return Div(Div(self.label + ( " ✅" if self.done else " ⏹️") ,Span("❌",callback=self.delete) if self.done else ""  ,callback=self.toggle) , role="group")
+        return Div(Div(self.label + ( " ✅" if self.done else " ⏹️") ,hx_get="/todo") , role="group")
 
     def delete(self,x):
         delete_todo(self)
+        return Span()
 
     def toggle(self,obj):
         self.done = not self.done
+        
+
+import time
 
 
 
-
-
-
+    
 t = Todos([Todo(f"Todo {i}", i%2 == 0) for i in range(10)])
 def AddTodo():
     def add(x):
