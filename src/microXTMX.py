@@ -19,22 +19,22 @@ def add_head(*content):
 
 
 class MicroHTMX(Microdot):
-    def route(self, url_pattern, methods=None):
-        def decorated(f):
-            async def r(*args, **kwargs):
-                resp = await f(*args, **kwargs)
-                if isinstance(resp, Response):
-                    return resp
-                if isinstance(resp, tuple):
-                    resp = " ".join(resp)
-                return Response(resp, headers={"Content-Type": "text/html"})
+    # def route(self, url_pattern, methods=None):
+    #     def decorated(f):
+    #         async def r(*args, **kwargs):
+    #             resp = await f(*args, **kwargs)
+    #             if isinstance(resp, Response):
+    #                 return resp
+    #             if isinstance(resp, tuple):
+    #                 resp = " ".join(resp)
+    #             return Response(resp, headers={"Content-Type": "text/html"})
 
-            self.url_map.append(
-                ([m.upper() for m in (methods or ["GET"])], URLPattern(url_pattern), r)
-            )
-            return r
+    #         self.url_map.append(
+    #             ([m.upper() for m in (methods or ["GET"])], URLPattern(url_pattern), r)
+    #         )
+    #         return r
 
-        return decorated
+    #     return decorated
 
     def page(self, path):
         def decorator(f):
@@ -51,7 +51,7 @@ app = MicroHTMX()
 
 app.url_map.append(("GET", URLPattern("/ws_updates"), ws_sender))
 app.url_map.append(("GET", URLPattern("/ws_callbacks"), ws_reciver))
-
+Response.default_content_type = "text/html"
 
 @app.post("callbacks/<id>")
 async def _(request, id):

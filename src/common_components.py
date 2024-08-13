@@ -13,8 +13,8 @@ def navBar(path):
         )
     )
 
-def page_template(*content , request):
-    yield from Header(navBar(request.path),klass="container")
+def page_template(*content , path = "/"):
+    yield from Header(navBar(path),klass="container")
     yield from Span( hx_ext="ws", ws_connect="/ws_updates")
     yield from Main(*content,klass="container", hx_ext="ws", ws_connect="/ws_callbacks")
 

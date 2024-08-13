@@ -5,37 +5,6 @@ from lib_src.microdot.microdot import Request
 from lib_src.ringbuf_queue import RingbufQueue as Queue
 import json
 
-class State(object):
-    def __init__(self) -> None:
-        self.callback = None
-        self.id = "id1-" + str(id(self))
-
-    # def init(self):
-    #     self.callback = dispatch_to_ws
-
-    def render(self):
-        raise NotImplementedError
-
-    def __call__(self, *args, **kwds):
-        return Span(self.render(),id=self.id) #.replace(">",f" id={self.id}>",1)
-    
-    def __setattr__(self,name,value):
-        super().__setattr__(name,value)
-        if self.callback:
-            self.callback(self())
-
-
-
-# def reactive(f):
-#     def decorted(obj:State , *args,**kwargs):
-#         def add_id():
-#             return f(obj,*args,**kwargs).replace( ">" ," id='id-"+str(id(obj)) + "' >" , 1)
-#         obj.callbacks.append(lambda:dispatch_to_ws(add_id()))
-#         return add_id()
-
-#     return decorted
-
-
 send_queue = {}
 def dispatch_to_ws(obj):   
     data = "".join(obj) 
@@ -45,6 +14,40 @@ def dispatch_to_ws(obj):
             q.put_nowait(data)
         except IndexError:
             print("queue full")
+
+class ReactiveProperty:
+    def __init__(self, initial_value=None):
+        self.initial_value = initial_value
+
+    def __get__(self, obj, objtype=None):
+        if obj is None:
+            return self
+        if not hasattr(obj, '_reactive_values'):
+            obj._reactive_values = {}
+        if self not in obj._reactive_values:
+            obj._reactive_values[self] = self.initial_value
+        return obj._reactive_values[self]
+
+    def __set__(self, obj, value):
+        if not hasattr(obj, '_reactive_values'):
+            obj._reactive_values = {}
+        obj._reactive_values[self] = value
+
+        if obj.dispatch_fn:
+            type(obj).dispatch_fn(obj())
+
+class ReactiveComponent:
+    dispatch_fn = dispatch_to_ws
+
+    def __init__(self) -> None:
+        self.id = "id1-" + str(id(self))
+
+    def __call__(self, *args, **kwds):
+            return Span(self.render(),id=self.id)
+
+    def render(self):
+        raise NotImplementedError("Render method must be implemented by child classes")
+
 
 @with_websocket
 async def ws_sender(request:Request, ws: WebSocket):
