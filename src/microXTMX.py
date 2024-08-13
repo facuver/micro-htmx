@@ -14,7 +14,7 @@ def add_head(*content):
                 
             ),
             Body(*content, klass="container", ),       
-        ),
+        )
     )
 
 
@@ -41,12 +41,8 @@ class MicroHTMX(Microdot):
             @self.get(path)
             async def decorated(*args, **kwargs):
                 resp = await f(*args, **kwargs)
-                if isinstance(resp, tuple):
-                    resp = " ".join(resp)
                 return add_head(resp)
-
             return decorated
-
         return decorator
 
 
