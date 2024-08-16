@@ -8,12 +8,17 @@ import json
 send_queue = {}
 def dispatch_to_ws(obj):   
     data = "".join(obj) 
+    item_to_pop = None
     print(data)
     for r,q in send_queue.items():
         try:
             q.put_nowait(data)
         except IndexError:
+            item_to_pop = r
             print("queue full")
+
+    if item_to_pop:
+        send_queue.pop(item_to_pop)
 
 class ReactiveProperty:
     def __init__(self, initial_value=None):
@@ -35,6 +40,8 @@ class ReactiveProperty:
 
         if obj.dispatch_fn:
             type(obj).dispatch_fn(obj())
+
+    
 
 class ReactiveComponent:
     dispatch_fn = dispatch_to_ws

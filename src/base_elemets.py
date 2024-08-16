@@ -2,7 +2,7 @@ from typing import TypedDict ,Literal
 from typing_extensions import Unpack # type: ignore
 import gc
 
-def chunk(gen, size):
+def chunk(gen, size= 1024):
     buffer = bytearray(size)
     index = 0
     for item in gen:

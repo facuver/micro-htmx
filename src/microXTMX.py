@@ -9,8 +9,9 @@ def add_head(*content):
             Head(
                 Meta(charset="UTF-8"),
                 Script(src="public/gz/gz.htmx.min.js"),
-                Script(src="public/gz/gz.ws.js"),
-                Link(rel="stylesheet", href="public/gz/gz.pico.zinc.min.css"),
+                Script(src="public/gz/gz.ws.js"), 
+                Script(src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.16.0/cdn/shoelace-autoloader.js",type="module"), 
+                Link(rel="stylesheet", href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.16.0/cdn/themes/light.css"),
                 
             ),
             Body(*content, klass="container", ),       
