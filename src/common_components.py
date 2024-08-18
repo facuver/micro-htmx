@@ -2,12 +2,12 @@ from lib.microHTMX.base_elemets import Html,Head,Script,Link,Title,Body,Main,Hea
 
 def navBar(current_path):
     print(current_path)
-    def selected(path:str):
+    def A_or_Stong(path:str):
         if path == current_path:
             return Strong(path[1:].upper() )
         return A(path[1:].upper() , href=path)
     
-    paths = [Li(selected(p)) for p in ["/home","/about", "/gpio"]]
+    paths = [Li(A_or_Stong(p)) for p in ["/home","/about", "/gpio"]]
 
     return  Nav(
             

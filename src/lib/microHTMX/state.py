@@ -10,7 +10,6 @@ send_queue = {}
 def dispatch_to_ws(obj):   
     data = "".join(obj) 
     item_to_pop = None
-    print(data)
     for r,q in send_queue.items():
         try:
             q.put_nowait(data)

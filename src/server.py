@@ -1,7 +1,9 @@
-from lib.microHTMX.base_elemets import *  # noqa: F403
+from microHTMX.base_elemets import *  # noqa: F403
+from microHTMX.microXTMX import app , redirect ,
+from microHTMX.state import ReactiveComponent, ReactiveProperty
+
 from common_components import page_template
-from lib.microHTMX.microXTMX import app , redirect
-from lib.microHTMX.state import ReactiveComponent, ReactiveProperty
+from components.temperature import TemperatureDisplay
 
 
 class Counter(ReactiveComponent):
@@ -19,38 +21,29 @@ class Counter(ReactiveComponent):
         return H1(Span(f"{self.count}  :: {self.double_count}"))
 
 
-
-c= Counter()
-# Usage
-def Co():
-    global c
-    return Div(c(), Div("+",klass="button", callback=lambda x: c.increment() , value="Ok"))
-
+def templated(*args, **kwargs):
+    return chunk(page_template(*args, **kwargs), 1024)
 
 @app.get("/")
 def _(r):
+    """
+    Redirect to /home otherwise the navbar defaluts to /
+    """
     return redirect("/home")
 
 @app.page("/home")
 async def _(request):
-    return chunk(
-        page_template(
-            Co(),
-            Co(),
-
-
-        path=request.path),
-        512,
-    )
+    return templated(Div("Heelo"), path=request.path)
 
 
 @app.page("/about")
 async def _(request):
-    return chunk(page_template(H1("Hello") ,path=request.path))
+    return templated(H1("Hello") ,path=request.path)
 
+temp = TemperatureDisplay()
 @app.page("/gpio")
 async def _(request):
-    return chunk(page_template(H1("Hello") ,path=request.path))
+    return templated(temp() ,path=request.path)
 
 def run():
     app.run(debug=True,port=80)
