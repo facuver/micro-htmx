@@ -1,9 +1,10 @@
-import asyncio
-from .base_elemets import Span,Element
+import json
+
 from microdot.websocket import with_websocket, WebSocket, WebSocketError
 from microdot.microdot import Request
+
 from .ringbuf_queue import RingbufQueue as Queue
-import json
+from .base_elemets import Span,Element
 
 send_queue = {}
 def dispatch_to_ws(obj):   
@@ -78,11 +79,11 @@ async def ws_reciver(request:Request,ws:WebSocket):
             headers = data.pop('HEADERS')
             if headers["HX-Trigger-Name"] in  Element.callbacks_map:
                 res = Element.callbacks_map[headers["HX-Trigger-Name"]](data)
+                if res:
+                    dispatch_to_ws(res)
             else:
                 print("Callback not found")
 
-            if res:
-                dispatch_to_ws(res)
     except WebSocketError:
         print("connection close reciver")
         await ws.close()
