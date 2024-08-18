@@ -1,8 +1,8 @@
 import asyncio
-from base_elemets import Span,Element
-from lib_src.microdot.websocket import with_websocket, WebSocket, WebSocketError
-from lib_src.microdot.microdot import Request
-from lib_src.ringbuf_queue import RingbufQueue as Queue
+from .base_elemets import Span,Element
+from microdot.websocket import with_websocket, WebSocket, WebSocketError
+from microdot.microdot import Request
+from .ringbuf_queue import RingbufQueue as Queue
 import json
 
 send_queue = {}

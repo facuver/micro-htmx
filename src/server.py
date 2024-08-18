@@ -1,7 +1,7 @@
-from base_elemets import *  # noqa: F403
+from lib.microHTMX.base_elemets import *  # noqa: F403
 from common_components import page_template
-from microXTMX import app , redirect
-from state import ReactiveComponent, ReactiveProperty
+from lib.microHTMX.microXTMX import app , redirect
+from lib.microHTMX.state import ReactiveComponent, ReactiveProperty
 
 
 class Counter(ReactiveComponent):

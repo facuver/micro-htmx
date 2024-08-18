@@ -1,6 +1,5 @@
 from typing import TypedDict ,Literal
 from typing_extensions import Unpack # type: ignore
-import gc
 
 def chunk(gen, size= 1024):
     buffer = bytearray(size)
@@ -53,7 +52,7 @@ class Element:
     def __init__(self, name) -> None:
         self.name = name
     
-    def __call__(self, *childs, callback=None, args=[], **kwargs):
+    def __call__(self, *childs, callback=None, args=[], **kwargs:Unpack[KWARGS]):
         yield from self._render(childs, callback, args, kwargs)
     
     def _render(self, childs, callback, args, kwargs):
