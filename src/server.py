@@ -1,6 +1,6 @@
 from base_elemets import *  # noqa: F403
 from common_components import page_template
-from microXTMX import app
+from microXTMX import app , redirect
 from lib_src.microdot.websocket import with_websocket, WebSocket
 from state import ReactiveComponent, ReactiveProperty
 
@@ -28,7 +28,10 @@ def Co():
     return Div(c(), Div("+",klass="button", callback=lambda x: c.increment() , value="Ok"))
 
 
-@app.page("/")
+@app.get("/")
+def _(r):
+    return redirect("/home")
+
 @app.page("/home")
 async def _(request):
     return chunk(

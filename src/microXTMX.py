@@ -10,8 +10,7 @@ def add_head(*content):
                 Meta(charset="UTF-8"),
                 Script(src="public/gz/gz.htmx.min.js"),
                 Script(src="public/gz/gz.ws.js"), 
-                Script(src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.16.0/cdn/shoelace-autoloader.js",type="module"), 
-                Link(rel="stylesheet", href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.16.0/cdn/themes/light.css"),
+                Link(rel="stylesheet", href="public\gz\gz.pico.zinc.min.css"),
                 
             ),
             Body(*content, klass="container", ),       
@@ -20,22 +19,12 @@ def add_head(*content):
 
 
 class MicroHTMX(Microdot):
-    # def route(self, url_pattern, methods=None):
-    #     def decorated(f):
-    #         async def r(*args, **kwargs):
-    #             resp = await f(*args, **kwargs)
-    #             if isinstance(resp, Response):
-    #                 return resp
-    #             if isinstance(resp, tuple):
-    #                 resp = " ".join(resp)
-    #             return Response(resp, headers={"Content-Type": "text/html"})
 
-    #         self.url_map.append(
-    #             ([m.upper() for m in (methods or ["GET"])], URLPattern(url_pattern), r)
-    #         )
-    #         return r
-
-    #     return decorated
+    def __init__(self):
+        super().__init__()
+        self.url_map.append(("GET", URLPattern("/ws_updates"), ws_sender))
+        self.url_map.append(("GET", URLPattern("/ws_callbacks"), ws_reciver))
+        Response.default_content_type = "text/html"
 
     def page(self, path):
         def decorator(f):
@@ -48,32 +37,6 @@ class MicroHTMX(Microdot):
 
 
 app = MicroHTMX()
-
-
-app.url_map.append(("GET", URLPattern("/ws_updates"), ws_sender))
-app.url_map.append(("GET", URLPattern("/ws_callbacks"), ws_reciver))
-Response.default_content_type = "text/html"
-
-@app.post("callbacks/<id>")
-async def _(request, id):
-    try:
-        body = {}
-        if request.body:
-            body = {
-                key: value
-                for key, value in [
-                    p.split("=") for p in request.body.decode("utf-8").split("&")
-                ]
-            }
-
-        resp = Element.callbacks_map[id](body)
-
-        if isinstance(resp, str):
-            return resp
-    except KeyError:
-        print("keyError")
-        return """<meta http-equiv="refresh" content="0" >"""
-    return
 
 
 @app.route("public/gz/<file>")
