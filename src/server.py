@@ -1,7 +1,6 @@
 from base_elemets import *  # noqa: F403
 from common_components import page_template
 from microXTMX import app , redirect
-from lib_src.microdot.websocket import with_websocket, WebSocket
 from state import ReactiveComponent, ReactiveProperty
 
 
@@ -51,10 +50,10 @@ async def _(request):
 
 @app.page("/gpio")
 async def _(request):
-    return chunk(page_template('<sl-button size="small">Click me</sl-button>',H1("Hello") ,path=request.path))
+    return chunk(page_template(H1("Hello") ,path=request.path))
 
 def run():
-    app.run(debug=True,port=5000)
+    app.run(debug=True,port=80)
 
 
 if __name__ == "__main__":
