@@ -66,10 +66,11 @@ async def ws_sender(request:Request, ws: WebSocket):
             await ws.send(data)
     except Exception as e:
         print("connection close", e)
-        await ws.close()
+        send_queue.pop(request)
+    del(my_q)
 
 @with_websocket
-async def ws_reciver(request:Request,ws:WebSocket):
+async def ws_callbacks(request:Request,ws:WebSocket):
 
     try:
       while True:
@@ -83,8 +84,6 @@ async def ws_reciver(request:Request,ws:WebSocket):
             else:
                 print("Callback not found")
 
-    except WebSocketError:
-        print("connection close reciver")
-        await ws.close()
-
+    except WebSocketError as e:
+        print("connection close reciver",e)
         
