@@ -1,9 +1,8 @@
-from microHTMX.base_elemets import *  # noqa: F403
-from microHTMX.microXTMX import app , redirect ,
-from microHTMX.state import ReactiveComponent, ReactiveProperty
+from lib.microHTMX.base_elemets import *  # noqa: F403
+from lib.microHTMX.microXTMX import app , redirect 
+from lib.microHTMX.state import ReactiveComponent, ReactiveProperty
 
 from common_components import page_template
-from components.temperature import TemperatureDisplay
 
 
 class Counter(ReactiveComponent):
@@ -38,12 +37,11 @@ async def _(request):
 
 @app.page("/about")
 async def _(request):
-    return templated(H1("Hello") ,path=request.path)
+    return templated(H1("Hello"),Div() ,path=request.path)
 
-temp = TemperatureDisplay()
 @app.page("/gpio")
 async def _(request):
-    return templated(temp() ,path=request.path)
+    return templated("SAS" ,path=request.path)
 
 def run():
     app.run(debug=True,port=80)

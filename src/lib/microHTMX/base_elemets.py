@@ -1,35 +1,35 @@
-from typing import TypedDict ,Literal
-from typing_extensions import Unpack # type: ignore
+from typing import TypedDict, Literal
+from typing_extensions import Unpack  # type: ignore
 
-def chunk(gen, size= 1024):
+
+def chunk(gen, size=1024):
     buffer = bytearray(size)
     index = 0
     for item in gen:
         item_bytes = item.encode("utf-8")
         item_length = len(item_bytes)
-        
+
         if index + item_length > size:
             # Yield current buffer content
             yield buffer[:index].decode("utf-8")
-            
+
             # # Reset buffer and index
             # buffer = bytearray(size)
             index = 0
-        
+
         # Copy new item into buffer
-        buffer[index:index+item_length] = item_bytes
+        buffer[index : index + item_length] = item_bytes
         index += item_length
-        
+
         # If buffer is full, yield it
         if index == size:
             yield buffer.decode("utf-8")
             buffer = bytearray(size)
             index = 0
-    
+
     # Yield any remaining content
     if index > 0:
         yield buffer[:index].decode("utf-8")
-
 
 
 class KWARGS(TypedDict):
@@ -41,66 +41,74 @@ class KWARGS(TypedDict):
     hx_on_click: str
     hx_push_url: str
     id: str
-    value:str
-    klass:str
+    value: str
+    klass: str
+
 
 class Element:
     callbacks_map = {}
-    self_closing_tags = {'img', 'input', 'br', 'hr', 'meta', 'link'}
-    always_closing_tags = {'script', 'style','div'}
+    self_closing_tags = {"img", "input", "br", "hr", "meta", "link"}
+    indent_level = 0
+    indent_string = " "
 
     def __init__(self, name) -> None:
         self.name = name
-    
-    def __call__(self, *childs, callback=None, args=[], **kwargs:Unpack[KWARGS]):
+
+    def __call__(self, *childs, callback=None, args=[], **kwargs: Unpack[KWARGS]):
         yield from self._render(childs, callback, args, kwargs)
-    
+
     def _render(self, childs, callback, args, kwargs):
         if callback:
             el_id = kwargs.get("id", hex(id(callback)))
             Element.callbacks_map[el_id] = callback
             kwargs["ws-send"] = "true"
             kwargs["name"] = el_id
-        
+
         # Generate opening tag
-        yield f"<{self.name}"
-        
+        yield f"\n{Element.indent_string *Element.indent_level}<{self.name}"
+
         # Generate attributes
         for key, value in kwargs.items():
             if value is False:
                 value = "false"
             elif value is True:
                 value = "true"
-            
-            if key == 'klass':
+
+            if key == "klass":
                 yield f" class='{value}'"
             else:
                 yield f" {key.replace('_', '-')}='{value}'"
-        
+
         for arg in args:
             yield f" {arg}"
-        
+
         if self.name in self.self_closing_tags:
-            yield "/>\n"
+            yield "/>"
             return
-        
-        yield ">\n"
-        
+
+        yield ">"
+
+        if not childs:
+            yield f"</{self.name}>"
+            return
+
+        Element.indent_level += 1
         # Generate child content
         for child in childs:
-            if not isinstance(child,str):
+            if not isinstance(child, str):
                 yield from child
             else:
-                yield str(child)
-        
+                yield "\n" + Element.indent_string * Element.indent_level + str(child)
+
         # Generate closing tag
-        yield f"</{self.name}>"
-        
+        Element.indent_level -= 1
+        yield f"\n{Element.indent_string *Element.indent_level}</{self.name}>"
+
 
 class Html(Element):
     def __init__(self):
-        super().__init__('html')
-    
+        super().__init__("html")
+
     def __call__(self, *childs, args=[], **kwargs):
         yield "<!DOCTYPE html>"
         yield from super()._render(childs, None, args, kwargs)
