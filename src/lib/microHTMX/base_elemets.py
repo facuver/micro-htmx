@@ -59,10 +59,9 @@ class Element:
 
     def _render(self, childs, callback, args, kwargs):
         if callback:
-            el_id = kwargs.get("id", hex(id(callback)))
+            el_id = kwargs.get("id", hex(hash(callback)))
             Element.callbacks_map[el_id] = callback
-            kwargs["ws-send"] = "true"
-            kwargs["name"] = el_id
+            kwargs["hx_post"] = f"/callbacks/{el_id}"
 
         # Generate opening tag
         yield f"\n{Element.indent_string *Element.indent_level}<{self.name}"

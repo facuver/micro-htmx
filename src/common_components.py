@@ -21,7 +21,7 @@ def navBar(current_path):
 
 def page_template(*content , path = "/"):
     yield from Header(navBar(path),klass="container")
-    yield from Main(*content,klass="h-screen bg-purple-400 flex items-center justify-center", hx_ext="ws", ws_connect="/ws_callbacks")
+    yield from Main(*content)
 
 
 

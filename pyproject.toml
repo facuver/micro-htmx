@@ -8,6 +8,7 @@ dependencies = [
     "microdot>=2.0.6",
     "ipykernel>=6.29.5",
     "ipywidgets>=8.1.3",
+    "pyreadline3>=3.4.1",
 ]
 readme = "README.md"
 requires-python = ">= 3.8"

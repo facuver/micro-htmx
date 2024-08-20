@@ -17,7 +17,7 @@ colorama==0.4.6
 comm==0.2.2
     # via ipykernel
     # via ipywidgets
-debugpy==1.8.3
+debugpy==1.8.5
     # via ipykernel
 decorator==5.1.1
     # via ipython
@@ -64,6 +64,8 @@ pure-eval==0.2.3
     # via stack-data
 pygments==2.18.0
     # via ipython
+pyreadline3==3.4.1
+    # via micro-htmx
 python-dateutil==2.9.0.post0
     # via jupyter-client
 pywin32==306
