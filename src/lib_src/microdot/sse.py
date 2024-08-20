@@ -69,6 +69,7 @@ def sse_response(request, event_function, *args, **kwargs):
 
         async def __anext__(self):
             event = None
+            
             while sse.queue or not task.done():
                 try:
                     event = sse.queue.pop(0)

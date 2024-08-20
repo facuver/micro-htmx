@@ -1,6 +1,6 @@
 from microdot.microdot import Microdot, Response, send_file, URLPattern,redirect , MUTED_SOCKET_ERRORS
 from .base_elemets import Element, Html, Head, Script, Link, Body,Meta,Span
-from .state import ws_callbacks,sse_sender,callbacks_request
+from .state import sse_sender,callbacks_request
 import asyncio
 
 MUTED_SOCKET_ERRORS.extend([64,10053])

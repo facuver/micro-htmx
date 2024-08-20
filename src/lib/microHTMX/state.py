@@ -5,13 +5,13 @@ from microdot.sse import with_sse, SSE
 from microdot.microdot import Request, Response
 
 from .ringbuf_queue import RingbufQueue as Queue
-from .base_elemets import Span, Element,H1
+from .base_elemets import Span, Element,H1,chunk
 
 send_queue = {}
 
 
 def dispatch_to_ws(obj):
-    data = {key: "".join(value) for key, value in obj.items()}
+    data = {key: value for key, value in obj.items()}
     item_to_pop = None
     for r, q in send_queue.items():
         try:
@@ -43,7 +43,7 @@ class ReactiveProperty:
         obj._reactive_values[self] = value
 
         if obj.dispatch_fn:
-            type(obj).dispatch_fn({obj.id: obj.render()})
+            type(obj).dispatch_fn({obj._id: obj.render()})
 
 
 class ReactiveComponent:
@@ -58,25 +58,44 @@ class ReactiveComponent:
     def render(self):
         raise NotImplementedError("Render method must be implemented by child classes")
 
+async def monkey_pached_send(self:SSE,element,event):
+    msg = b'event: ' + event.encode() + b'\n'
+    msg += b'data: '
+
+    self.queue.append(msg)
+    self.event.set()
+
+    for c in chunk(element,10):
+        self.queue.append(c.replace("\n",""))
+        self.event.set()
+    
+    self.queue.append("\n\n")
+    self.event.set()
+    
 
 @with_sse
 async def sse_sender(request: Request, sse: SSE):
     my_q = Queue(5)
     send_queue[request] = my_q
 
-    @request.after_request
-    def _(req,res):
-        print(res,req)
-        return res
-
     try:
         while True:
             data = await my_q.get()
             for key, value in data.items():
-                await sse.send(value.replace("\n",""), event=key)
+                await monkey_pached_send(sse,value, event=key)
     except Exception as e:
         print("connection close", e)
 
+async def callbacks_request(requets:Request,name):
+    if name in Element.callbacks_map:
+        bo = {}
+        if requets.body:
+            bo = {key:value for (key,value) in [s.split("=") for s in requets.body.decode("utf-8").split("&")] }
+        res = Element.callbacks_map[name](bo)
+        if res:
+                return res
+    else:
+        print("Callback not found")
 
 # @with_websocket
 # async def ws_sender(request:Request, ws: WebSocket):
@@ -98,32 +117,22 @@ async def sse_sender(request: Request, sse: SSE):
 #         print("connection close", e)
 
 
-@with_websocket
-async def ws_callbacks(request: Request, ws: WebSocket):
+# @with_websocket
+# async def ws_callbacks(request: Request, ws: WebSocket):
 
-    try:
-        while True:
-            data = json.loads(await ws.receive())
-            print(data)
-            headers = data.pop("HEADERS")
-            if headers["HX-Trigger-Name"] in Element.callbacks_map:
-                res = Element.callbacks_map[headers["HX-Trigger-Name"]](data)
-                if res:
-                    dispatch_to_ws(res)
-            else:
-                print("Callback not found")
+#     try:
+#         while True:
+#             data = json.loads(await ws.receive())
+#             print(data)
+#             headers = data.pop("HEADERS")
+#             if headers["HX-Trigger-Name"] in Element.callbacks_map:
+#                 res = Element.callbacks_map[headers["HX-Trigger-Name"]](data)
+#                 if res:
+#                     dispatch_to_ws(res)
+#             else:
+#                 print("Callback not found")
 
-    except WebSocketError:
-        print("connection close reciver")
+#     except WebSocketError:
+#         print("connection close reciver")
 
 
-async def callbacks_request(requets:Request,name):
-    if name in Element.callbacks_map:
-        bo = {}
-        if requets.body:
-            bo = {key:value for (key,value) in [s.split("=") for s in requets.body.decode("utf-8").split("&")] }
-        res = Element.callbacks_map[name](bo)
-        if res:
-                return res
-    else:
-        print("Callback not found")

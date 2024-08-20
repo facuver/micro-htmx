@@ -14,7 +14,7 @@ class Todo(ReactiveComponent):
     def __init__(self,label) -> None:
         super().__init__()
         self.label = label
-        self.todo_id  = id(self)
+        self.id  = id(self)
 
     def toggle(self,_):
         self.done = not self.done
@@ -34,8 +34,8 @@ class Todos(ReactiveComponent):
         self.todos = self.todos + [Todo(new)]
 
 
-    def remove_todo(self,todo):
-        self.todos = list(filter(lambda x:x._id!=todo.id, self.todos ))
+    def remove_todo(self,todo:Todo):
+        self.todos = list(filter(lambda x:x.id!=todo.id, self.todos ))
 
     def render(self):
         return Div(*[s() for s in self.todos ])
