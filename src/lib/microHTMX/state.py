@@ -1,7 +1,7 @@
 import json
 
 from microdot.websocket import with_websocket, WebSocket, WebSocketError
-from microdot.microdot import Request
+from microdot.microdot import Request, Response
 
 from .ringbuf_queue import RingbufQueue as Queue
 from .base_elemets import Span,Element
@@ -60,13 +60,22 @@ class ReactiveComponent:
 async def ws_sender(request:Request, ws: WebSocket):
     my_q= Queue(5)
     send_queue[request] = my_q
+
+    @request.after_request
+    def _(request, response):
+        print("closing Request")
+        send_queue.pop(request)
+        response.already_handled = True
+        return response
+    
     try:
         while True:
             data = await my_q.get()
             await ws.send(data)
     except Exception as e:
         print("connection close", e)
-        await ws.close()
+
+
 
 @with_websocket
 async def ws_reciver(request:Request,ws:WebSocket):
@@ -85,6 +94,5 @@ async def ws_reciver(request:Request,ws:WebSocket):
 
     except WebSocketError:
         print("connection close reciver")
-        await ws.close()
 
         

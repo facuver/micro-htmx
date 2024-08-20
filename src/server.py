@@ -1,3 +1,4 @@
+import asyncio
 from lib.microHTMX.base_elemets import *  # noqa: F403
 from lib.microHTMX.microXTMX import app , redirect 
 from lib.microHTMX.state import ReactiveComponent, ReactiveProperty
@@ -7,17 +8,23 @@ from common_components import page_template
 
 class Counter(ReactiveComponent):
     count:int= ReactiveProperty(0)
-    double:int = ReactiveProperty(0)
+    
     def __init__(self) -> None:
-        self.double_count = self.count * 2
-
         super().__init__()
+        self.count = 0
+        asyncio.create_task(self._update())
+
+    async def _update(self):
+        while True:
+            self.increment()
+            await asyncio.sleep(1)
+
 
     def increment(self):
         self.count += 1
 
     def render(self):
-        return H1(Span(f"{self.count}  :: {self.double_count}"))
+        return H1(Span(f"{self.count}"))
 
 
 def templated(*args, **kwargs):
@@ -32,7 +39,8 @@ def _(r):
 
 @app.page("/home")
 async def _(request):
-    return templated(Div("Heelo"), path=request.path)
+    c= Counter()
+    return templated(c(), path=request.path)
 
 
 @app.page("/about")
