@@ -1,9 +1,12 @@
 import asyncio
+import asyncio
 from lib.microHTMX.base_elemets import *  # noqa: F403
-from lib.microHTMX.microXTMX import app , redirect 
+from lib.microHTMX.microHTMX import MicroHTMX, redirect 
 from lib.microHTMX.state import ReactiveComponent, ReactiveProperty
 
 from common_components import page_template
+
+app = MicroHTMX(reactive=True)
 
 
 class Counter(ReactiveComponent):
@@ -25,6 +28,7 @@ class Counter(ReactiveComponent):
 
     def render(self):
         return H1(Span(f"{self.count}"))
+        return H1(Span(f"{self.count}"))
 
 
 def templated(*args, **kwargs):
@@ -36,6 +40,7 @@ def _(r):
     Redirect to /home otherwise the navbar defaluts to /
     """
     return redirect("/home")
+
 
 @app.page("/home")
 async def _(request):

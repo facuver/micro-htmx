@@ -78,7 +78,7 @@ async def ws_sender(request:Request, ws: WebSocket):
 
 
 @with_websocket
-async def ws_reciver(request:Request,ws:WebSocket):
+async def ws_callbacks(request:Request,ws:WebSocket):
 
     try:
       while True:
