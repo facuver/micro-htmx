@@ -9,10 +9,7 @@ from .ringbuf_queue import RingbufQueue as Queue
 from .base_elemets import Span, Element,H1,chunk
 
 send_queue = {}
-
-
 def dispatch_to_ws(obj):
-    
     item_to_pop = None
     for r, q in send_queue.items():
         try:
@@ -23,6 +20,7 @@ def dispatch_to_ws(obj):
 
     if item_to_pop:
         send_queue.pop(item_to_pop)
+
 
 
 class ReactiveProperty:
@@ -45,7 +43,7 @@ class ReactiveProperty:
 
         if obj.dispatch_fn:
             type(obj).dispatch_fn(obj)
-import gc
+
 
 class ReactiveComponent:
     dispatch_fn = dispatch_to_ws
@@ -59,7 +57,7 @@ class ReactiveComponent:
     def render(self):
         raise NotImplementedError("Render method must be implemented by child classes")
 
-async def monkey_pached_send(self:SSE,element,event):
+async def monkey_pach_ws_send(self:SSE,element,event):
     msg = b'event: ' + event.encode() + b'\n'
     msg += b'data: '
 
@@ -70,7 +68,6 @@ async def monkey_pached_send(self:SSE,element,event):
         while not self.queue:
             await asyncio.sleep(0.1)
 
-        print(gc.mem_free())
         self.queue.append(c.replace("\n",""))
         self.event.set()
     
@@ -78,16 +75,20 @@ async def monkey_pached_send(self:SSE,element,event):
     self.event.set()
     
 
+
 @with_sse
 async def sse_sender(request: Request, sse: SSE):
-    my_q = Queue(5)
+    my_q:list[ReactiveComponent] = Queue(5)
     send_queue[request] = my_q
 
     try:
         while True:
-            data = await my_q.get()
-            await monkey_pached_send(sse,data.render(), event=data._id)
-    except IndexError as e:
+            obj:ReactiveComponent = await my_q.get()
+            await monkey_pach_ws_send(sse,obj.render(), event=obj._id)
+    except OverflowError as e:
+        raise e
+
+    except Exception as e:
         print("connection close", e)
 
 async def callbacks_request(requets:Request,name):

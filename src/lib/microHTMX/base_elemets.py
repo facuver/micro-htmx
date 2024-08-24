@@ -9,7 +9,9 @@ def chunk(gen, size=1024):
 
         item_bytes = item.encode("utf-8")
         item_length = len(item_bytes)
-
+        if item_length > size:
+            print("too large")
+            raise OverflowError("Buffer not large enougth to handle this generator...")
         if index + item_length > size:
             # Yield current buffer content
             yield buffer[:index].decode("utf-8")
