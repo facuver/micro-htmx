@@ -1,3 +1,4 @@
+import asyncio
 import json
 
 from microdot.websocket import with_websocket, WebSocket, WebSocketError
@@ -11,11 +12,11 @@ send_queue = {}
 
 
 def dispatch_to_ws(obj):
-    data = {key: value for key, value in obj.items()}
+    
     item_to_pop = None
     for r, q in send_queue.items():
         try:
-            q.put_nowait(data)
+            q.put_nowait(obj)
         except IndexError:
             item_to_pop = r
             print("queue full")
@@ -43,8 +44,8 @@ class ReactiveProperty:
         obj._reactive_values[self] = value
 
         if obj.dispatch_fn:
-            type(obj).dispatch_fn({obj._id: obj.render()})
-
+            type(obj).dispatch_fn(obj)
+import gc
 
 class ReactiveComponent:
     dispatch_fn = dispatch_to_ws
@@ -65,7 +66,11 @@ async def monkey_pached_send(self:SSE,element,event):
     self.queue.append(msg)
     self.event.set()
 
-    for c in chunk(element,10):
+    for c in chunk(element,1024):
+        while not self.queue:
+            await asyncio.sleep(0.1)
+
+        print(gc.mem_free())
         self.queue.append(c.replace("\n",""))
         self.event.set()
     
@@ -81,9 +86,8 @@ async def sse_sender(request: Request, sse: SSE):
     try:
         while True:
             data = await my_q.get()
-            for key, value in data.items():
-                await monkey_pached_send(sse,value, event=key)
-    except Exception as e:
+            await monkey_pached_send(sse,data.render(), event=data._id)
+    except IndexError as e:
         print("connection close", e)
 
 async def callbacks_request(requets:Request,name):

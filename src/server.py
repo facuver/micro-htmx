@@ -21,10 +21,10 @@ class Todo(ReactiveComponent):
 
     def render(self):
 
-        return Div(H3(self.label  + (" ✅" if self.done else " ⏹️"), callback= self.toggle) ,  H3("❌" , callback=lambda x,t=self:c.remove_todo(t)) if self.done else "" , role="group")
-
+        return Div(H3(self.label  + (" ✅" if self.done else " ⏹️")) ,  H3("❌" ) if self.done else "" , role="group")
+ 
 class Todos(ReactiveComponent):
-    todos:list[Todo] = ReactiveProperty([Todo("Gee")])
+    todos:list[Todo] = ReactiveProperty([Todo(f"Todo {i}") for i in range(50) ])
 
     def __init__(self) -> None:
         super().__init__()

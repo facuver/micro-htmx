@@ -1,18 +1,19 @@
 from typing import TypedDict, Literal
 from typing_extensions import Unpack  # type: ignore
-
+import gc
 
 def chunk(gen, size=1024):
     buffer = bytearray(size)
     index = 0
     for item in gen:
+
         item_bytes = item.encode("utf-8")
         item_length = len(item_bytes)
 
         if index + item_length > size:
             # Yield current buffer content
             yield buffer[:index].decode("utf-8")
-
+            print(f"yielded {index}")
             # # Reset buffer and index
             # buffer = bytearray(size)
             index = 0
